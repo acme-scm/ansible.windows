@@ -1,18 +1,16 @@
 ---
-- name: get the current hostname
+- name: Get the current hostname
   win_command: hostname
   register: current_hostname
-
 - block:
-  - name: run tests
-    include_tasks: test.yml
-
+    - name: Run tests
+      ansible.builtin.include_tasks: test.yml
   always:
-  - name: reset the hostname back to the original
-    win_hostname:
-      name: '{{current_hostname.stdout_lines[0]}}'
-    register: reset_hostname
+    - name: Reset the hostname back to the original
+      win_hostname:
+        name: "{{ current_hostname.stdout_lines[0] }}"
+      register: reset_hostname
 
-  - name: reboot if required
-    win_reboot:
-    when: reset_hostname.reboot_required
+    - name: Reboot if required
+      win_reboot:
+      when: reset_hostname.reboot_required

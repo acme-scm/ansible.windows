@@ -1,7 +1,7 @@
 ---
 - name: Get current entries for right
   test_get_right:
-    name: '{{ test_win_user_right_name }}'
+    name: "{{ test_win_user_right_name }}"
   register: actual_users
 
 - name: Get facts
@@ -11,16 +11,15 @@
   block:
     - name: Ensure right is empty before test
       ansible.windows.win_user_right:
-        name: '{{ test_win_user_right_name }}'
+        name: "{{ test_win_user_right_name }}"
         users: []
         action: set
 
     - name: Run tests
       ansible.builtin.include_tasks: tests.yml
-
   always:
     - name: Reset entries for test right
       ansible.windows.win_user_right:
-        name: '{{ test_win_user_right_name }}'
-        users: '{{ actual_users.users }}'
+        name: "{{ test_win_user_right_name }}"
+        users: "{{ actual_users.users }}"
         action: set

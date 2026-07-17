@@ -1,6 +1,6 @@
+---
 # test code for the slurp module when using winrm connection
 # (c) 2014, Chris Church <chris@ninemoreminutes.com>
-
 # This file is part of Ansible
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -16,14 +16,14 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-- name: create test directory
+- name: Create test directory
   win_file:
-    path: '{{ test_win_slurp_dir }}'
+    path: "{{ test_win_slurp_dir }}"
     state: directory
   notify: remove test directory
-
 # removes reliance on win_copy, set back once win_copy supports glob like chars
-- name: create test file
+
+- name: Create test file
   win_shell: |
     $file = '{{ test_win_slurp_dir }}\slurp.txt'
     if (Test-Path -LiteralPath $file) {
@@ -31,66 +31,66 @@
     }
     Set-Content -LiteralPath $file -Value 'Slurp this!'
 
-- name: test slurping an existing file
-  slurp:
-    src: '{{ test_win_slurp_dir }}\slurp.txt'
+- name: Test slurping an existing file
+  ansible.builtin.slurp:
+    src: "{{ test_win_slurp_dir }}\\slurp.txt"
   register: slurp_existing
 
-- name: check slurp existing result
-  assert:
+- name: Check slurp existing result
+  ansible.builtin.assert:
     that:
-      - "slurp_existing.content == 'U2x1cnAgdGhpcyENCg=='"
-      - "slurp_existing.encoding == 'base64'"
-      - "slurp_existing is not changed"
-      - "slurp_existing is not failed"
+      - slurp_existing.content == 'U2x1cnAgdGhpcyENCg=='
+      - slurp_existing.encoding == 'base64'
+      - slurp_existing is not changed
+      - slurp_existing is not failed
 
-- name: test slurping a large binary file with path param and backslashes
-  slurp:
+- name: Test slurping a large binary file with path param and backslashes
+  ansible.builtin.slurp:
     path: C:\Windows\explorer.exe
   register: slurp_path_backslashes
   no_log: true
 
-- name: check slurp result with path param and backslashes
-  assert:
+- name: Check slurp result with path param and backslashes
+  ansible.builtin.assert:
     that:
       - slurp_path_backslashes.content is defined
       - slurp_path_backslashes.encoding == 'base64'
       - slurp_path_backslashes is not changed
       - slurp_path_backslashes is not failed
 
-- name: test slurping a non-existent file
-  slurp:
+- name: Test slurping a non-existent file
+  ansible.builtin.slurp:
     src: C:\this_file_should_not_exist.txt
   register: slurp_missing
   ignore_errors: true
 
-- name: check slurp missing result
-  assert:
+- name: Check slurp missing result
+  ansible.builtin.assert:
     that:
       - slurp_missing is failed
       - slurp_missing.msg is defined
       - slurp_missing is not changed
 
-- name: test slurping a directory
-  slurp:
-    src: '{{ test_win_slurp_dir }}\missing'
+- name: Test slurping a directory
+  ansible.builtin.slurp:
+    src: "{{ test_win_slurp_dir }}\\missing"
   register: slurp_dir
   ignore_errors: true
 
-- name: check slurp directory result
-  assert:
+- name: Check slurp directory result
+  ansible.builtin.assert:
     that:
       - slurp_dir is failed
       - slurp_dir.msg is defined
       - slurp_dir is not changed
 
-- name: test slurp with missing argument
+- name: Test slurp with missing argument
   action: slurp
   register: slurp_no_args
   ignore_errors: true
 
-- name: check slurp with missing argument result
-  assert:
+- name: Check slurp with missing argument result
+  ansible.builtin.assert:
     that:
       - slurp_no_args is failed
       - slurp_no_args.msg is defined

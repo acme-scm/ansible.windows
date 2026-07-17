@@ -1,5 +1,5 @@
 ---
-- name: expect failure when specifying config and config_file together
+- name: Expect failure when specifying config and config_file together
   ansible.windows.dsc3:
     config:
       resources:
@@ -10,21 +10,21 @@
   register: win_dsc3_both_config_file_result
   ignore_errors: true
 
-- name: assert failure message when specifying config and config_file together
-  assert:
+- name: Assert failure message when specifying config and config_file together
+  ansible.builtin.assert:
     that:
       - >-
         win_dsc3_both_config_file_result.msg == "parameters are mutually exclusive: config, config_file"
 
-- name: expect failure if using async and controller config_file
+- name: Expect failure if using async and controller config_file
   ansible.windows.dsc3:
     config_file: config_docs/test.config.dsc.yml
-  async: 60
   register: win_dsc3_async_controller_file_result
   ignore_errors: true
+  async: 60
 
-- name: assert failure message when using async and controller config_file
-  assert:
+- name: Assert failure message when using async and controller config_file
+  ansible.builtin.assert:
     that:
       - >-
         win_dsc3_async_controller_file_result.msg == "async operations are not supported with local config_file"
@@ -48,10 +48,10 @@
           resources:
             - name: echo
               type: Microsoft.DSC.Debug/Echo
-              properties: '{{ state }}'
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
+              properties: "{{ state }}"
       register: win_dsc3_echo_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Check echo single resource state
       ansible.builtin.assert:
@@ -79,18 +79,18 @@
           resources:
             - name: echo a
               type: Microsoft.DSC.Debug/Echo
-              properties: '{{ state_a }}'
+              properties: "{{ state_a }}"
             - name: echo b
               type: Microsoft.DSC.Debug/Echo
-              properties: '{{ state_b }}'
+              properties: "{{ state_b }}"
             - name: new c
               type: Ansible.Windows.Debug/Fake
-              properties: '{{ state_c }}'
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_AFTER_STATE: '{{ state_c | to_json }}'
-      diff: true
+              properties: "{{ state_c }}"
       register: win_dsc3_echo_multiple_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
+        FAKE_AFTER_STATE: "{{ state_c | to_json }}"
+      diff: true
 
     - name: Verify echo/fake multiple resource states
       ansible.builtin.assert:
@@ -124,14 +124,14 @@
           resources:
             - name: Check mode
               type: Ansible.Windows.Debug/Fake
-              properties: '{{ state }}'
+              properties: "{{ state }}"
+      register: win_dsc3_check_no_change_result
       environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_BEFORE_STATE: '{{ state | to_json }}'
-        FAKE_AFTER_STATE: '{{ state | to_json }}'
+        PATH: "{{ test_dsc3_path_env }}"
+        FAKE_BEFORE_STATE: "{{ state | to_json }}"
+        FAKE_AFTER_STATE: "{{ state | to_json }}"
       check_mode: true
       diff: true
-      register: win_dsc3_check_no_change_result
 
     - name: Verify check mode with no changes
       ansible.builtin.assert:
@@ -144,7 +144,7 @@
   vars:
     state_current:
       a: a
-      b: null
+      b:
     state_wanted:
       a: a
       b: b
@@ -157,13 +157,13 @@
           resources:
             - name: Check mode
               type: Ansible.Windows.Debug/Fake
-              properties: '{{ state_wanted }}'
+              properties: "{{ state_wanted }}"
+      register: win_dsc3_check_with_change_result
       environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_BEFORE_STATE: '{{ state_current | to_json }}'
+        PATH: "{{ test_dsc3_path_env }}"
+        FAKE_BEFORE_STATE: "{{ state_current | to_json }}"
       check_mode: true
       diff: true
-      register: win_dsc3_check_with_change_result
 
     - name: Verify check mode with changes
       ansible.builtin.assert:
@@ -189,12 +189,12 @@
           resources:
             - name: New state
               type: Ansible.Windows.Debug/Fake
-              properties: '{{ state }}'
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_BEFORE_STATE: '{}'
-        FAKE_AFTER_STATE: '{{ state | to_json }}'
+              properties: "{{ state }}"
       register: win_dsc3_new_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
+        FAKE_BEFORE_STATE: "{}"
+        FAKE_AFTER_STATE: "{{ state | to_json }}"
       diff: true
 
     - name: Verify configure new state result
@@ -221,9 +221,9 @@
               type: string
         parameters:
           message: Hello, world!
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_with_parameters_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure using parameters
       ansible.builtin.assert:
@@ -241,10 +241,10 @@
             - name: Bad
               type: Ansible.Windows.Debug/Unknown
               properties: {}
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_unknown_resource_result
       ignore_errors: true
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure using unknown resource result
       ansible.builtin.assert:
@@ -259,10 +259,10 @@
       ansible.windows.dsc3:
         config:
           notSupported: {}
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_bad_config_result
       ignore_errors: true
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure using invalid config doc
       ansible.builtin.assert:
@@ -280,11 +280,11 @@
             - name: Force error
               type: Ansible.Windows.Debug/Fake
               properties: {}
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
-        FAKE_EXIT_CODE: '1'
       register: win_dsc3_resource_error_result
       ignore_errors: true
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
+        FAKE_EXIT_CODE: "1"
 
     - name: Verify configure using resource that fails
       ansible.builtin.assert:
@@ -304,9 +304,9 @@
               properties:
                 output: Verbose
         trace_level: info
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_debug_logging_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure with info logging
       ansible.builtin.assert:
@@ -320,9 +320,9 @@
     - name: Configure using imported config document
       ansible.windows.dsc3:
         config: "{{ lookup('ansible.builtin.file', 'config_docs/test.config.dsc.yml') | from_yaml }}"
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_import_yaml_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure using imported config document
       ansible.builtin.assert:
@@ -334,26 +334,24 @@
 - name: Configure using local config document
   ansible.windows.dsc3:
     config_file: config_docs/test.config.dsc.yml
-  environment:
-    PATH: '{{ test_dsc3_path_env }}'
   register: win_dsc3_config_result
-
+  environment:
+    PATH: "{{ test_dsc3_path_env }}"
 - name: Verify configure using local config document
   ansible.builtin.assert:
     that:
       - win_dsc3_config_result is not failed
       - win_dsc3_config_result is not changed
   when: not win_dsc3_config_result is skipped
-
 - name: Configure using target-local configuration document
   block:
     - name: Configure using target-local config document
       ansible.windows.dsc3:
-        config_file: '{{ test_dsc3_config_docs_path }}\test.config.dsc.yml'
+        config_file: "{{ test_dsc3_config_docs_path }}\\test.config.dsc.yml"
         remote_config_file: true
-      environment:
-        PATH: '{{ test_dsc3_path_env }}'
       register: win_dsc3_local_config_result
+      environment:
+        PATH: "{{ test_dsc3_path_env }}"
 
     - name: Verify configure using target-local config document
       ansible.builtin.assert:

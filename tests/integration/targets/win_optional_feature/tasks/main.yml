@@ -1,6 +1,6 @@
+---
 # Test code for win_optional_feature module
 # Copyright: (c) 2019, Carson Anderson <rcanderson23@gmail.com>
-
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -16,25 +16,25 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-- name: check if host supports module
+- name: Check if host supports module
   win_shell: if (Get-Command -Name Enable-WindowsOptionalFeature -ErrorAction SilentlyContinue) { $true } else { $false }
   register: run_tests
 
-- name: run tests
+- name: Run tests
   when: run_tests.stdout | trim | bool
   block:
-  - name: ensure we start test with removed features
-    win_optional_feature:
-      name:
-      - SimpleTCP
-      - TelnetClient
-      state: absent
-  - include_tasks: tests.yml
+    - name: Ensure we start test with removed features
+      win_optional_feature:
+        name:
+          - SimpleTCP
+          - TelnetClient
+        state: absent
 
+    - ansible.builtin.include_tasks: tests.yml
   always:
-  - name: make sure test features have been removed after test
-    win_optional_feature:
-      name:
-      - SimpleTCP
-      - TelnetClient
-      state: absent
+    - name: Make sure test features have been removed after test
+      win_optional_feature:
+        name:
+          - SimpleTCP
+          - TelnetClient
+        state: absent

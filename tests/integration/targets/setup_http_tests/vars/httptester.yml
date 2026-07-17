@@ -1,3 +1,4 @@
+---
 # these are fake hostnames provided by docker link for the httptester container
 badssl_host: fail.ansible.http.tests
 httpbin_host: ansible.http.tests

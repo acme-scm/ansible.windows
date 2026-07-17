@@ -1,6 +1,6 @@
 ---
-- name: remove test service
+- name: Remove test service
   win_service:
-    name: '{{ item }}'
+    name: "{{ item }}"
     state: absent
-  loop: '{{ service_names }}'
+  loop: "{{ service_names }}"
