@@ -1,79 +1,67 @@
 # Due to the special environment setup required for proxies, you can manually test out the proxy options with
 # https://github.com/jborean93/ansible-powershell-url-proxy.
 ---
-- name: set fact out special testing dir
-  set_fact:
-    testing_dir: '{{ remote_tmp_dir }}\win_get_url .ÅÑŚÌβŁÈ [$!@^&test(;)]'
-
-- name: create test directory with space and special chars
+- name: Set fact out special testing dir
+  ansible.builtin.set_fact:
+    testing_dir: "{{ remote_tmp_dir }}\\win_get_url .ÅÑŚÌβŁÈ [$!@^&test(;)]"
+- name: Create test directory with space and special chars
   win_file:
-    path: '{{ testing_dir }}'
+    path: "{{ testing_dir }}"
     state: directory
-
-- name: copy across testing files
+- name: Copy across testing files
   win_copy:
     src: files/
-    dest: '{{ testing_dir }}'
-
+    dest: "{{ testing_dir }}"
 # False positive in Windows Defender is flagging the file as a virus and removing it. We need to add an exclusion so
 # the tests continue to work
-- name: add exclusion for the SlimFTPd binary
+- name: Add exclusion for the SlimFTPd binary
   win_defender_exclusion:
-    path: '{{ remote_tmp_dir | win_dirname }}'
+    path: "{{ remote_tmp_dir | win_dirname }}"
     state: present
-
-- name: download SlimFTPd binary
+- name: Download SlimFTPd binary
   win_get_url:
     url: https://ansible-ci-files.s3.amazonaws.com/test/integration/roles/test_win_get_url/SlimFTPd.exe
-    dest: '{{ testing_dir }}\SlimFTPd.exe'
+    dest: "{{ testing_dir }}\\SlimFTPd.exe"
   register: download_res
   until: download_res is successful
   retries: 3
   delay: 5
-
 # SlimFTPd does not work with special chars because it is so old, use a symlink as a workaround
-- name: set fact of temp symlink for SlimFTPd
-  set_fact:
+- name: Set fact of temp symlink for SlimFTPd
+  ansible.builtin.set_fact:
     slimftpd_link: C:\SlimFTPd
-
-- name: template SlimFTPd configuration file
+- name: Template SlimFTPd configuration file
   win_template:
     src: slimftpd.conf.tmpl
-    dest: '{{ testing_dir }}\slimftpd.conf'
-
+    dest: "{{ testing_dir }}\\slimftpd.conf"
 - block:
-  - name: create SLimFTPd symlink
-    win_command: cmd.exe /c mklink /d "{{ slimftpd_link }}" "{{ testing_dir }}"
-
-  - name: create SlimFTPd service
-    win_service:
-      name: SlimFTPd
-      path: '"{{ slimftpd_link }}\SlimFTPd.exe" -service'
-      state: started
-      dependencies:
-      - tcpip
-
-  - name: run URL tests
-    import_tasks: tests_url.yml
-
-  - name: run FTP tests
-    import_tasks: tests_ftp.yml
-
-  - name: run checksum tests
-    import_tasks: tests_checksum.yml
-
+    - name: Create SLimFTPd symlink
+      win_command: cmd.exe /c mklink /d "{{ slimftpd_link }}" "{{ testing_dir }}"
+    - name: Create SlimFTPd service
+      win_service:
+        name: SlimFTPd
+        path: '"{{ slimftpd_link }}\SlimFTPd.exe" -service'
+        state: started
+        dependencies:
+          - tcpip
+    - name: Run URL tests
+      ansible.builtin.import_tasks: tests_url.yml
+    - name: Run FTP tests
+      ansible.builtin.import_tasks: tests_ftp.yml
+    - name: Run checksum tests
+      ansible.builtin.import_tasks: tests_checksum.yml
   always:
-  - name: remove SlimFTPd service
-    win_service:
-      name: SlimFTPd
-      state: absent
+    - name: Remove SlimFTPd service
+      win_service:
+        name: SlimFTPd
+        state: absent
 
-  - name: remove temp symlink
-    win_file:
-      path: '{{ slimftpd_link }}'
-      state: absent
+    - name: Remove temp symlink
+      win_file:
+        path: "{{ slimftpd_link }}"
+        state: absent
 
-  - name: remove exclusion for the SlimFTPd binary
-    win_defender_exclusion:
-      path: '{{ remote_tmp_dir | win_dirname }}'
-      state: absent
+    - name: Remove exclusion for the SlimFTPd binary
+      win_defender_exclusion:
+        path: "{{ remote_tmp_dir | win_dirname }}"
+        state: absent

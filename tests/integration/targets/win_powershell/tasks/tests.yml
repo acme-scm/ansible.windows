@@ -1,6 +1,7 @@
-- name: run script with various output types
+---
+- name: Run script with various output types
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $null
       'string'
@@ -11,26 +12,20 @@
       [string]
       [char]'a'
       [Exception]"abc"
-
       # Date tests
       $epoch_unspec = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1
       $epoch_local = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Local)
       $epoch_utc = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
-
       $epoch_unspec
       $epoch_unspec.ToLocalTime()
       $epoch_unspec.ToUniversalTime()
-
       $epoch_local
       $epoch_local.ToLocalTime()
       $epoch_local.ToUniversalTime()
-
       $epoch_utc
       $epoch_utc.ToLocalTime()
       $epoch_utc.ToUniversalTime()
-
       ([DateTimeOffset]$epoch_utc).ToOffset([TimeSpan]::FromHours(2))
-
       # List tests
       ,@()
       ,@(1)
@@ -54,7 +49,6 @@
               exceed = Get-Item ([IO.Path]::GetTempPath())
           }
       )
-
       # Dictionary tests
       @{}
       @{
@@ -77,7 +71,6 @@
       $hash = @{foo = 'bar'}
       Add-Member -InputObject $hash -NotePropertyName foo -NotePropertyValue hidden
       $hash
-
       # Classes with properties
       [PSCustomObject]@{
           Key = 'value'
@@ -93,128 +86,104 @@
               Key = 'value'
           }
       }
-
       Get-Item ([IO.Path]::GetTempPath())
-
   register: output_types
 
-- name: assert script with various output types
-  assert:
+- name: Assert script with various output types
+  ansible.builtin.assert:
     that:
-    - output_types is changed
-    - output_types.debug == []
-    - output_types.error == []
-    - output_types.host_err == ''
-    - output_types.host_out == ''
-    - output_types.information == []
-    - output_types.output|length == 28
-    - output_types.output[0] == None
+      - output_types is changed
+      - output_types.debug == []
+      - output_types.error == []
+      - output_types.host_err == ''
+      - output_types.host_out == ''
+      - output_types.information == []
+      - output_types.output|length == 28
+      - output_types.output[0] == None
+      - output_types.output[1] == 'string'
+      - output_types.output[2] == 1
+      - output_types.output[3]['String'] == 'Hidden, Archive'
+      - output_types.output[3]['Type'] == 'System.IO.FileAttributes'
+      - output_types.output[3]['Value'] == 34
+      - output_types.output[4]['String'] == 'Read'
+      - output_types.output[4]['Type'] == 'System.IO.FileAccess'
+      - output_types.output[4]['Value'] == 1
+      - output_types.output[5]['AssemblyQualifiedName'].startswith('System.Object, ')
+      - output_types.output[5]['BaseType'] == None
+      - output_types.output[5]['FullName'] == 'System.Object'
+      - output_types.output[5]['Name'] == 'Object'
+      - output_types.output[6]['AssemblyQualifiedName'].startswith('System.String, ')
+      - output_types.output[6]['BaseType']['AssemblyQualifiedName'].startswith('System.Object, ')
+      - output_types.output[6]['BaseType']['BaseType'] == None
+      - output_types.output[6]['BaseType']['FullName'] == 'System.Object'
+      - output_types.output[6]['BaseType']['Name'] == 'Object'
+      - output_types.output[6]['FullName'] == 'System.String'
+      - output_types.output[6]['Name'] == 'String'
+      - output_types.output[7] == 'a'
+      - output_types.output[8]['Data'] == {}
+      - output_types.output[8]['HResult'] == -2146233088
+      - output_types.output[8]['HelpLink'] == None
+      - output_types.output[8]['InnerException'] == None
+      - output_types.output[8]['Message'] == 'abc'
+      - output_types.output[8]['Source'] == None
+      - output_types.output[8]['StackTrace'] == None
+      - output_types.output[8]['TargetSite'] == None
+      - output_types.output[9] == dt_values.output[0]
+      - output_types.output[10] == dt_values.output[1]
+      - output_types.output[11] == dt_values.output[2]
+      - output_types.output[12] == dt_values.output[3]
+      - output_types.output[13] == dt_values.output[4]
+      - output_types.output[14] == dt_values.output[5]
+      - output_types.output[15] == dt_values.output[6]
+      - output_types.output[16] == dt_values.output[7]
+      - output_types.output[17] == dt_values.output[8]
+      - output_types.output[18] == dt_values.output[9]
+      - output_types.output[19] == []
+      - output_types.output[20] == [1]
+      - output_types.output[21] == [None]
+      - output_types.output[22]|length == 8
+      - output_types.output[22][0] == 'entry 1'
+      - output_types.output[22][1] == None
+      - output_types.output[22][2] == 1
+      - output_types.output[22][3] == ['level2', 'level3 value']
+      - output_types.output[22][4] == []
+      - output_types.output[22][5] == [1]
+      - output_types.output[22][6] == [None]
+      - output_types.output[22][7]['key'] == 'value'
+      - output_types.output[22][7]['exceed'] | lower == test_tmpdir
+      - output_types.output[23] == {}
+      - output_types.output[24]['foo'] == 'bar'
+      - output_types.output[24]['list']|length == 3
+      - output_types.output[24]['list'][0] == 'System.Collections.Hashtable'
+      - output_types.output[24]['list'][1] == 'value 2'
+      - output_types.output[24]['list'][2] == 'System.String'
+      - output_types.output[24]['empty_list'] == []
+      - output_types.output[24]['null_list'] == [None]
+      - output_types.output[24]['list_with_1'] == [1]
+      - output_types.output[24]['nested']['exceed'] == 'System.Collections.Hashtable'
+      - 'output_types.output[25] == {"foo": "bar"}'
+      - output_types.output[26]['Key'] == 'value'
+      - output_types.output[26]['DateTime'] == '1970-01-01T00:00:00.0000000Z'
+      - output_types.output[26]['Enum']['String'] == 'Read'
+      - output_types.output[26]['Enum']['Type'] == 'System.IO.FileAccess'
+      - output_types.output[26]['Enum']['Value'] == 1
+      - output_types.output[26]['List'] == ['value 1', 'value 2']
+      - output_types.output[26]['Nested']['Exceed'] == 'System.Collections.Hashtable'
+      - output_types.output[26]['Nested']['Key'] == 'value'
+      - output_types.output[27]['BaseName'] | lower is string
+      - output_types.output[27]['Exists'] == True
+      - output_types.output[27]['FullName'] | lower == test_tmpdir
+      - output_types.output[27]['PSDrive']['Name'] is string
+      - output_types.output[27]['PSDrive']['Provider'] == 'Microsoft.PowerShell.Core\FileSystem'
+      - output_types.output[27]['PSProvider']['ImplementingType'] == 'Microsoft.PowerShell.Commands.FileSystemProvider'
+      - output_types.output[27]['PSProvider']['Name'] == 'FileSystem'
+      - output_types.result == {}
+      - output_types.verbose == []
+      - output_types.warning == []
 
-    - output_types.output[1] == 'string'
-
-    - output_types.output[2] == 1
-
-    - output_types.output[3]['String'] == 'Hidden, Archive'
-    - output_types.output[3]['Type'] == 'System.IO.FileAttributes'
-    - output_types.output[3]['Value'] == 34
-
-    - output_types.output[4]['String'] == 'Read'
-    - output_types.output[4]['Type'] == 'System.IO.FileAccess'
-    - output_types.output[4]['Value'] == 1
-
-    - output_types.output[5]['AssemblyQualifiedName'].startswith('System.Object, ')
-    - output_types.output[5]['BaseType'] == None
-    - output_types.output[5]['FullName'] == 'System.Object'
-    - output_types.output[5]['Name'] == 'Object'
-
-    - output_types.output[6]['AssemblyQualifiedName'].startswith('System.String, ')
-    - output_types.output[6]['BaseType']['AssemblyQualifiedName'].startswith('System.Object, ')
-    - output_types.output[6]['BaseType']['BaseType'] == None
-    - output_types.output[6]['BaseType']['FullName'] == 'System.Object'
-    - output_types.output[6]['BaseType']['Name'] == 'Object'
-    - output_types.output[6]['FullName'] == 'System.String'
-    - output_types.output[6]['Name'] == 'String'
-
-    - output_types.output[7] == 'a'
-
-    - output_types.output[8]['Data'] == {}
-    - output_types.output[8]['HResult'] == -2146233088
-    - output_types.output[8]['HelpLink'] == None
-    - output_types.output[8]['InnerException'] == None
-    - output_types.output[8]['Message'] == 'abc'
-    - output_types.output[8]['Source'] == None
-    - output_types.output[8]['StackTrace'] == None
-    - output_types.output[8]['TargetSite'] == None
-
-    - output_types.output[9] == dt_values.output[0]
-    - output_types.output[10] == dt_values.output[1]
-    - output_types.output[11] == dt_values.output[2]
-
-    - output_types.output[12] == dt_values.output[3]
-    - output_types.output[13] == dt_values.output[4]
-    - output_types.output[14] == dt_values.output[5]
-
-    - output_types.output[15] == dt_values.output[6]
-    - output_types.output[16] == dt_values.output[7]
-    - output_types.output[17] == dt_values.output[8]
-
-    - output_types.output[18] == dt_values.output[9]
-
-    - output_types.output[19] == []
-
-    - output_types.output[20] == [1]
-
-    - output_types.output[21] == [None]
-
-    - output_types.output[22]|length == 8
-    - output_types.output[22][0] == 'entry 1'
-    - output_types.output[22][1] == None
-    - output_types.output[22][2] == 1
-    - output_types.output[22][3] == ['level2', 'level3 value']
-    - output_types.output[22][4] == []
-    - output_types.output[22][5] == [1]
-    - output_types.output[22][6] == [None]
-    - output_types.output[22][7]['key'] == 'value'
-    - output_types.output[22][7]['exceed'] | lower == test_tmpdir
-
-    - output_types.output[23] == {}
-
-    - output_types.output[24]['foo'] == 'bar'
-    - output_types.output[24]['list']|length == 3
-    - output_types.output[24]['list'][0] == 'System.Collections.Hashtable'
-    - output_types.output[24]['list'][1] == 'value 2'
-    - output_types.output[24]['list'][2] == 'System.String'
-    - output_types.output[24]['empty_list'] == []
-    - output_types.output[24]['null_list'] == [None]
-    - output_types.output[24]['list_with_1'] == [1]
-    - output_types.output[24]['nested']['exceed'] == 'System.Collections.Hashtable'
-
-    - 'output_types.output[25] == {"foo": "bar"}'
-
-    - output_types.output[26]['Key'] == 'value'
-    - output_types.output[26]['DateTime'] == '1970-01-01T00:00:00.0000000Z'
-    - output_types.output[26]['Enum']['String'] == 'Read'
-    - output_types.output[26]['Enum']['Type'] == 'System.IO.FileAccess'
-    - output_types.output[26]['Enum']['Value'] == 1
-    - output_types.output[26]['List'] == ['value 1', 'value 2']
-    - output_types.output[26]['Nested']['Exceed'] == 'System.Collections.Hashtable'
-    - output_types.output[26]['Nested']['Key'] == 'value'
-
-    - output_types.output[27]['BaseName'] | lower is string
-    - output_types.output[27]['Exists'] == True
-    - output_types.output[27]['FullName'] | lower == test_tmpdir
-    - output_types.output[27]['PSDrive']['Name'] is string
-    - output_types.output[27]['PSDrive']['Provider'] == 'Microsoft.PowerShell.Core\FileSystem'
-    - output_types.output[27]['PSProvider']['ImplementingType'] == 'Microsoft.PowerShell.Commands.FileSystemProvider'
-    - output_types.output[27]['PSProvider']['Name'] == 'FileSystem'
-
-    - output_types.result == {}
-    - output_types.verbose == []
-    - output_types.warning == []
-
-- name: output with larger depth
+- name: Output with larger depth
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     depth: 3
     script: |
       @(
@@ -231,28 +200,27 @@
                               'even more squashed'
                           )
                       )
-
                   )
               )
           )
       )
   register: higher_depth
 
-- name: assert output with larger depth without executable
-  assert:
+- name: Assert output with larger depth without executable
+  ansible.builtin.assert:
     that:
-    - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Object[]']]]]
+      - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Object[]']]]]
   when: not pwsh_executable is defined
 
-- name: assert output with larger depth with executable
-  assert:
+- name: Assert output with larger depth with executable
+  ansible.builtin.assert:
     that:
-    - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Collections.ArrayList']]]]
+      - higher_depth.output == ['normal 0', ['normal 1', ['normal 2', ['normal 3', 'squashed System.Collections.ArrayList']]]]
   when: pwsh_executable is defined
 
-- name: set explicit value on Ansible.Result
+- name: Set explicit value on Ansible.Result
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $Ansible.Result = @(
           (New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)),
@@ -260,106 +228,105 @@
       )
   register: result_ansible
 
-- name: assert set explicit value on Ansible.Result
-  assert:
+- name: Assert set explicit value on Ansible.Result
+  ansible.builtin.assert:
     that:
-    - result_ansible is changed
-    - result_ansible.output == []
-    - result_ansible.result == ['1970-01-01T00:00:00.0000000Z', 'string']
+      - result_ansible is changed
+      - result_ansible.output == []
+      - result_ansible.result == ['1970-01-01T00:00:00.0000000Z', 'string']
 
-- name: set empty array as Ansible.Result
+- name: Set empty array as Ansible.Result
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: $Ansible.Result = @()
   register: result_ansible
 
-- name: assert set empty array as Ansible.Result
-  assert:
+- name: Assert set empty array as Ansible.Result
+  ansible.builtin.assert:
     that:
-    - result_ansible is changed
-    - result_ansible.output == []
-    - result_ansible.result == []
+      - result_ansible is changed
+      - result_ansible.output == []
+      - result_ansible.result == []
 
-- name: get temporary directory
+- name: Get temporary directory
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $tmp = $Ansible.Tmpdir
       $null = New-Item -Path "$tmp\Directory" -ItemType Directory
-
       $tmp
   register: tmpdir
 
-- name: check that tmpdir doesn't exist anymore
+- name: Check that tmpdir doesn't exist anymore
   win_powershell:
     script: Test-Path -LiteralPath $args[0]
     parameters:
-      Path: '{{ tmpdir.output[0] }}'
+      Path: "{{ tmpdir.output[0] }}"
   register: tmpdir_actual
 
-- name: assert get temporary directory
-  assert:
+- name: Assert get temporary directory
+  ansible.builtin.assert:
     that:
-    - tmpdir is changed
-    - not tmpdir_actual.output[0]
+      - tmpdir is changed
+      - not tmpdir_actual.output[0]
 
-- name: dont fail with error record
+- name: Dont fail with error record
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
-        'output 1'
-        Write-Error -Message 'error'
-        'output 2'
+      'output 1'
+      Write-Error -Message 'error'
+      'output 2'
   register: error_record
 
-- name: assert dont fail with error record
-  assert:
+- name: Assert dont fail with error record
+  ansible.builtin.assert:
     that:
-    - error_record is changed
-    - error_record.error|length == 1
-    - error_record.error[0]['category_info']['activity'] == 'Write-Error'
-    - error_record.error[0]['category_info']['category'] == 'NotSpecified'
-    - error_record.error[0]['category_info']['category_id'] == 0
-    - error_record.error[0]['category_info']['reason'] == 'WriteErrorException'
-    - error_record.error[0]['category_info']['target_name'] == ''
-    - error_record.error[0]['category_info']['target_type'] == ''
-    - error_record.error[0]['error_details'] == None
-    - error_record.error[0]['exception']['help_link'] == None
-    - error_record.error[0]['exception']['hresult'] == -2146233087
-    - error_record.error[0]['exception']['inner_exception'] == None
-    - error_record.error[0]['exception']['message'] == 'error'
-    - error_record.error[0]['exception']['source'] == None
-    - error_record.error[0]['exception']['type'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
-    - error_record.error[0]['fully_qualified_error_id'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
-    - error_record.error[0]['output'] is defined
-    - error_record.error[0]['pipeline_iteration_info'] == [0, 0]
-    - "error_record.error[0]['script_stack_trace'] == 'at <ScriptBlock>, <No file>: line 2'"
-    - error_record.error[0]['target_object'] == None
-    - error_record.output == ['output 1', 'output 2']
+      - error_record is changed
+      - error_record.error|length == 1
+      - error_record.error[0]['category_info']['activity'] == 'Write-Error'
+      - error_record.error[0]['category_info']['category'] == 'NotSpecified'
+      - error_record.error[0]['category_info']['category_id'] == 0
+      - error_record.error[0]['category_info']['reason'] == 'WriteErrorException'
+      - error_record.error[0]['category_info']['target_name'] == ''
+      - error_record.error[0]['category_info']['target_type'] == ''
+      - error_record.error[0]['error_details'] == None
+      - error_record.error[0]['exception']['help_link'] == None
+      - error_record.error[0]['exception']['hresult'] == -2146233087
+      - error_record.error[0]['exception']['inner_exception'] == None
+      - error_record.error[0]['exception']['message'] == 'error'
+      - error_record.error[0]['exception']['source'] == None
+      - error_record.error[0]['exception']['type'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
+      - error_record.error[0]['fully_qualified_error_id'] == 'Microsoft.PowerShell.Commands.WriteErrorException'
+      - error_record.error[0]['output'] is defined
+      - error_record.error[0]['pipeline_iteration_info'] == [0, 0]
+      - "error_record.error[0]['script_stack_trace'] == 'at <ScriptBlock>, <No file>: line 2'"
+      - error_record.error[0]['target_object'] == None
+      - error_record.output == ['output 1', 'output 2']
 
-- name: fail with error record and ErrorActionPreference Stop
+- name: Fail with error record and ErrorActionPreference Stop
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     error_action: stop
     script: |
-        'output 1'
-        Write-Error -Message 'error'
-        'output 2'
+      'output 1'
+      Write-Error -Message 'error'
+      'output 2'
   register: error_record_stop
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert fail with error record and ErrorActionPreference Stop
-  assert:
+- name: Assert fail with error record and ErrorActionPreference Stop
+  ansible.builtin.assert:
     that:
-    - error_record_stop is failed
-    - error_record_stop is failed
-    - error_record_stop.error|length == 1
-    - error_record_stop.error[0]['exception']['message'] == 'error'
-    - error_record_stop.output == ['output 1']
+      - error_record_stop is failed
+      - error_record_stop is failed
+      - error_record_stop.error|length == 1
+      - error_record_stop.error[0]['exception']['message'] == 'error'
+      - error_record_stop.output == ['output 1']
 
-- name: output more complex error record
+- name: Output more complex error record
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       Function Test-Function {
           [CmdletBinding()]
@@ -368,7 +335,6 @@
               [Object]
               $InputObject
           )
-
           process {
               if ($InputObject -eq 2) {
                   $errorParams = @{
@@ -386,132 +352,125 @@
                   Write-Error @errorParams
               }
           }
-
       }
       1..3 | Test-Function
   register: complex_error_record
 
-- name: assert output more complex error record
-  assert:
+- name: Assert output more complex error record
+  ansible.builtin.assert:
     that:
-    - complex_error_record is changed
-    - complex_error_record.error|length == 1
-    # WinPS uses Write-Error, Pwsh uses ran pipeline.
-    - complex_error_record.error[0]['category_info']['activity'] in ['Write-Error', 'ran pipeline']
-    - complex_error_record.error[0]['category_info']['category'] == 'PermissionDenied'
-    - complex_error_record.error[0]['category_info']['category_id'] == 18
-    - complex_error_record.error[0]['category_info']['reason'] == 'touch luck'
-    - complex_error_record.error[0]['category_info']['target_name'] == 'target'
-    - complex_error_record.error[0]['category_info']['target_type'] == 'directory'
-    - complex_error_record.error[0]['error_details']['message'] == 'error message'
-    - complex_error_record.error[0]['error_details']['recommended_action'] == 'recommended action'
-    - complex_error_record.error[0]['exception']['help_link'] == None
-    - complex_error_record.error[0]['exception']['hresult'] == -2147467259
-    - complex_error_record.error[0]['exception']['inner_exception'] == None
-    - complex_error_record.error[0]['exception']['message'] is string
-    - complex_error_record.error[0]['exception']['source'] == None
-    - complex_error_record.error[0]['exception']['type'] == 'System.ComponentModel.Win32Exception'
-    - complex_error_record.error[0]['fully_qualified_error_id'] == 'error id,Test-Function'
-    - complex_error_record.error[0]['output'] is defined
-    - complex_error_record.error[0]['pipeline_iteration_info'] == [2, 2]
-    - >-
+      - complex_error_record is changed
+      - complex_error_record.error|length == 1
+      # WinPS uses Write-Error, Pwsh uses ran pipeline.
+      - complex_error_record.error[0]['category_info']['activity'] in ['Write-Error', 'ran pipeline']
+      - complex_error_record.error[0]['category_info']['category'] == 'PermissionDenied'
+      - complex_error_record.error[0]['category_info']['category_id'] == 18
+      - complex_error_record.error[0]['category_info']['reason'] == 'touch luck'
+      - complex_error_record.error[0]['category_info']['target_name'] == 'target'
+      - complex_error_record.error[0]['category_info']['target_type'] == 'directory'
+      - complex_error_record.error[0]['error_details']['message'] == 'error message'
+      - complex_error_record.error[0]['error_details']['recommended_action'] == 'recommended action'
+      - complex_error_record.error[0]['exception']['help_link'] == None
+      - complex_error_record.error[0]['exception']['hresult'] == -2147467259
+      - complex_error_record.error[0]['exception']['inner_exception'] == None
+      - complex_error_record.error[0]['exception']['message'] is string
+      - complex_error_record.error[0]['exception']['source'] == None
+      - complex_error_record.error[0]['exception']['type'] == 'System.ComponentModel.Win32Exception'
+      - complex_error_record.error[0]['fully_qualified_error_id'] == 'error id,Test-Function'
+      - complex_error_record.error[0]['output'] is defined
+      - complex_error_record.error[0]['pipeline_iteration_info'] == [2, 2]
+      - >-
         complex_error_record.error[0]['script_stack_trace'] is search('at Test-Function<Process>, <No file>: line 23')
-    - >-
+      - >-
         complex_error_record.error[0]['script_stack_trace'] is search('at <ScriptBlock>, <No file>: line 28')
-    - complex_error_record.error[0]['target_object'] == 'some object'
+      - complex_error_record.error[0]['target_object'] == 'some object'
 
-- name: failure with terminating exception
+- name: Failure with terminating exception
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       'output 1'
       throw "exception"
       'output 2'
   register: failed_exception
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert failure with terminating exception
-  assert:
+- name: Assert failure with terminating exception
+  ansible.builtin.assert:
     that:
-    - failed_exception is failed
-    - failed_exception.error|length == 1
-    - failed_exception.error[0]['exception']['message'] == 'exception'
-    - failed_exception.output == ['output 1']
+      - failed_exception is failed
+      - failed_exception.error|length == 1
+      - failed_exception.error[0]['exception']['message'] == 'exception'
+      - failed_exception.output == ['output 1']
 
-- name: failure with Ansible.Failed
+- name: Failure with Ansible.Failed
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       'output 1'
       $Ansible.Failed = $true
       'output 2'
   register: failed_ansible
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert failure with Ansible.Failed
-  assert:
+- name: Assert failure with Ansible.Failed
+  ansible.builtin.assert:
     that:
-    - failed_ansible is failed
-    - failed_ansible.error == []
-    - failed_ansible.output == ['output 1', 'output 2']
+      - failed_ansible is failed
+      - failed_ansible.error == []
+      - failed_ansible.output == ['output 1', 'output 2']
 
 - name: Ansible.Failed cannot overwrite terminating exception
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $Ansible.Failed = $false
       throw "exception"
   register: term_beats_failed
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert Ansible.Failed cannot overwrite terminating exception
-  assert:
+- name: Assert Ansible.Failed cannot overwrite terminating exception
+  ansible.builtin.assert:
     that:
-    - term_beats_failed is failed
-    - term_beats_failed.error|length == 1
-    - term_beats_failed.error[0]['exception']['message'] == 'exception'
+      - term_beats_failed is failed
+      - term_beats_failed.error|length == 1
+      - term_beats_failed.error[0]['exception']['message'] == 'exception'
 
-- name: error with interactive prompt
+- name: Error with interactive prompt
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: $Host.UI.ReadLine()
   register: error_noninteractive
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert error with interactive prompt
-  assert:
+- name: Assert error with interactive prompt
+  ansible.builtin.assert:
     that:
-    - error_noninteractive is changed
-    - not error_noninteractive is failed  # This isn't considered a terminating exception in PowerShell so no failure here.
-    - error_noninteractive.error|length == 1
-    - "'PowerShell is in NonInteractive mode. Read and Prompt functionality is not available.' in error_noninteractive.error[0]['exception']['message']"
-    - error_noninteractive.output == []
+      - error_noninteractive is changed
+      - not error_noninteractive is failed # This isn't considered a terminating exception in PowerShell so no failure here.
+      - error_noninteractive.error|length == 1
+      - "'PowerShell is in NonInteractive mode. Read and Prompt functionality is not available.' in error_noninteractive.error[0]['exception']['message']"
+      - error_noninteractive.output == []
 
-- name: run script with parameters
+- name: Run script with parameters
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       [CmdletBinding()]
       param (
           [String]
           $String,
-
           [Switch]
           $Switch,
-
           [Bool]
           $Bool,
-
           [int]
           $Int,
-
           [Object[]]
           $List,
-
           [Hashtable]
           $Dict
       )
-
       @{
           String = $String
           Switch = $Switch
@@ -522,329 +481,316 @@
       }
     parameters:
       String: string
-      Switch: True
-      Bool: False
+      Switch: true
+      Bool: false
       Int: 1
       List:
-      - abc
-      - 123
+        - abc
+        - 123
       Dict:
         Key: Value
   register: parameters
 
-- name: assert run script with parameters
-  assert:
+- name: Assert run script with parameters
+  ansible.builtin.assert:
     that:
-    - parameters is changed
-    - parameters.output|length == 1
-    - parameters.output[0]['String'] == 'string'
-    - parameters.output[0]['Switch'] == True
-    - parameters.output[0]['Bool'] == False
-    - parameters.output[0]['Int'] == 1
-    - parameters.output[0]['List'] == ['abc', 123]
-    - "parameters.output[0]['Dict'] == {'Key': 'Value'}"
+      - parameters is changed
+      - parameters.output|length == 1
+      - parameters.output[0]['String'] == 'string'
+      - parameters.output[0]['Switch'] == True
+      - parameters.output[0]['Bool'] == False
+      - parameters.output[0]['Int'] == 1
+      - parameters.output[0]['List'] == ['abc', 123]
+      - "parameters.output[0]['Dict'] == {'Key': 'Value'}"
 
-- name: write debug/verbose/warning streams
+- name: Write debug/verbose/warning streams
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $DebugPreference = 'Continue'
       $VerbosePreference = 'Continue'
       $WarningPreference = 'Continue'
-
       Write-Debug 'debug'
       Write-Verbose 'verbose'
       Write-Warning 'warning'
-
   register: extra_streams
 
-- name: assert write debug/verbose/warning streams
-  assert:
+- name: Assert write debug/verbose/warning streams
+  ansible.builtin.assert:
     that:
-    - extra_streams is changed
-    - >-
+      - extra_streams is changed
+      - >-
         extra_streams.host_out.splitlines() == ['DEBUG: debug', 'VERBOSE: verbose', 'WARNING: warning']
-    - extra_streams.debug == ['debug']
-    - extra_streams.verbose == ['verbose']
-    - extra_streams.warning == ['warning']
+      - extra_streams.debug == ['debug']
+      - extra_streams.verbose == ['verbose']
+      - extra_streams.warning == ['warning']
 
-- name: output information record
+- name: Output information record
   win_powershell:
     script: |
       $epoch = New-Object -TypeName DateTime -ArgumentList 1970, 1, 1, 0, 0, 0, ([DateTimeKind]::Utc)
       Write-Information -MessageData $epoch -Tags tag1
   register: info_record
 
-- name: assert output information record
-  assert:
+- name: Assert output information record
+  ansible.builtin.assert:
     that:
-    - info_record is changed
-    - info_record.information|length == 1
-    - info_record.information[0]['message_data'] == '1970-01-01T00:00:00.0000000Z'
-    - info_record.information[0]['source'] == 'Write-Information'
-    - info_record.information[0]['tags'] == ['tag1']
-    - info_record.information[0]['time_generated'].endswith('Z')
-    - info_record.output == []
+      - info_record is changed
+      - info_record.information|length == 1
+      - info_record.information[0]['message_data'] == '1970-01-01T00:00:00.0000000Z'
+      - info_record.information[0]['source'] == 'Write-Information'
+      - info_record.information[0]['tags'] == ['tag1']
+      - info_record.information[0]['time_generated'].endswith('Z')
+      - info_record.output == []
 
-- name: verify confirmation prompts aren't called
+- name: Verify confirmation prompts aren't called
   win_powershell:
     script: |
       [CmdletBinding(SupportsShouldProcess, ConfirmImpact='High')]
       param ()
-
       $PSCmdlet.ShouldProcess('action')
   register: ignore_confirm
 
-- name: assert verify confirmation prompts aren't called
-  assert:
+- name: Assert verify confirmation prompts aren't called
+  ansible.builtin.assert:
     that:
-    - ignore_confirm is changed
-    - ignore_confirm.output == [True]
+      - ignore_confirm is changed
+      - ignore_confirm.output == [True]
 
-- name: try to run an invalid script
+- name: Try to run an invalid script
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
-        def my_function():
-            print("abc")
-
-        def main():
-            my_function()
-
-        if __name__ == '__main__':
-            main()
-
+      def my_function():
+          print("abc")
+      def main():
+          my_function()
+      if __name__ == '__main__':
+          main()
   register: invalid_script
-  ignore_errors: yes
+  ignore_errors: true
 
-- name: assert try to run an invalid script
-  assert:
+- name: Assert try to run an invalid script
+  ansible.builtin.assert:
     that:
-    - invalid_script is failed
+      - invalid_script is failed
 
-- name: run script with custom location
+- name: Run script with custom location
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: $pwd.Path
-    chdir: '{{ remote_tmp_dir }}'
+    chdir: "{{ remote_tmp_dir }}"
   register: filesystem_chdir
 
-- name: assert run script with custom location
-  assert:
+- name: Assert run script with custom location
+  ansible.builtin.assert:
     that:
-    - filesystem_chdir is changed
-    - filesystem_chdir.output == [remote_tmp_dir]
+      - filesystem_chdir is changed
+      - filesystem_chdir.output == [remote_tmp_dir]
 
-- name: run script with non-filesystem location
+- name: Run script with non-filesystem location
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: $pwd.Path
     chdir: Cert:\LocalMachine\My
+  when: is_windows # There's no builtin PSDrive that we cant test with on POSIX
   register: cert_chdir
-  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
-- name: assert run script with non-filesystem location
-  assert:
+- name: Assert run script with non-filesystem location
+  ansible.builtin.assert:
     that:
-    - cert_chdir is changed
-    - cert_chdir.output == ['Cert:\LocalMachine\My']
+      - cert_chdir is changed
+      - cert_chdir.output == ['Cert:\LocalMachine\My']
   when: is_windows
 
-- name: skip execution when not in check mode
+- name: Skip execution when not in check mode
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: echo "hi"
   register: check
-  check_mode: yes
+  check_mode: true
 
-- name: assert skip execution when not in check mode
-  assert:
+- name: Assert skip execution when not in check mode
+  ansible.builtin.assert:
     that:
-    - check is changed
-    - check.msg == 'skipped, running in check mode'
-    - check.output == []
+      - check is changed
+      - check.msg == 'skipped, running in check mode'
+      - check.output == []
 
-- name: run check mode aware script
+- name: Run check mode aware script
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       [CmdletBinding(SupportsShouldProcess)]
       param ()
-
       $Ansible.CheckMode
   register: check_aware
-  check_mode: yes
+  check_mode: true
 
-- name: assert run check mode aware script
-  assert:
+- name: Assert run check mode aware script
+  ansible.builtin.assert:
     that:
-    - check_aware is changed
-    - check_aware.output == [True]
+      - check_aware is changed
+      - check_aware.output == [True]
 
 - name: SupportsShouldProcess with explicit value
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       [CmdletBinding(SupportsShouldProcess=$true)]
       param ()
-
       $PSCmdlet.ShouldProcess('resource')
   register: check_aware_true
-  check_mode: yes
+  check_mode: true
 
-- name: assert SupportsShouldProcess with explicit value
-  assert:
+- name: Assert SupportsShouldProcess with explicit value
+  ansible.builtin.assert:
     that:
-    - check_aware_true is changed
-    - check_aware_true.output == [False]
+      - check_aware_true is changed
+      - check_aware_true.output == [False]
 
-- name: skip check mode with SupportsShouldProcess=$false
+- name: Skip check mode with SupportsShouldProcess=$false
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       [CmdletBinding(SupportsShouldProcess=$false)]
       param ()
-
       $PSCmdlet.ShouldProcess('resource')
   register: check_aware_false
-  check_mode: yes
+  check_mode: true
 
-- name: assert skip check mode with SupportsShouldProcess=$false
-  assert:
+- name: Assert skip check mode with SupportsShouldProcess=$false
+  ansible.builtin.assert:
     that:
-    - check_aware_false is changed
-    - check_aware_false.msg == 'skipped, running in check mode'
-    - check_aware_false.output == []
+      - check_aware_false is changed
+      - check_aware_false.msg == 'skipped, running in check mode'
+      - check_aware_false.output == []
 
-- name: skip check mode without SupportsShouldProcess
+- name: Skip check mode without SupportsShouldProcess
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       [CmdletBinding()]
       param ()
-
       $PSCmdlet.ShouldProcess('resource')
   register: check_unaware
-  check_mode: yes
+  check_mode: true
 
-- name: assert skip check mode without SupportsShouldProcess
-  assert:
+- name: Assert skip check mode without SupportsShouldProcess
+  ansible.builtin.assert:
     that:
-    - check_unaware is changed
-    - check_unaware.msg == 'skipped, running in check mode'
-    - check_unaware.output == []
+      - check_unaware is changed
+      - check_unaware.msg == 'skipped, running in check mode'
+      - check_unaware.output == []
 
-- name: do not skip if file does not exist
+- name: Do not skip if file does not exist
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
     creates: missing
   register: creates_missing
 
-- name: assert do not skip if file does not exist
-  assert:
+- name: Assert do not skip if file does not exist
+  ansible.builtin.assert:
     that:
-    - creates_missing is changed
-    - creates_missing.output == ['output']
+      - creates_missing is changed
+      - creates_missing.output == ['output']
 
-- name: skip if file exists
+- name: Skip if file exists
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
-    creates: '{{ remote_tmp_dir }}'
+    creates: "{{ remote_tmp_dir }}"
   register: creates_exists
 
-- name: assert skip if file exists
-  assert:
+- name: Assert skip if file exists
+  ansible.builtin.assert:
     that:
-    - not creates_exists is changed
-    - creates_exists.msg == 'skipped, since ' + remote_tmp_dir + ' exists'
-    - creates_exists.output == []
+      - not creates_exists is changed
+      - creates_exists.msg == 'skipped, since ' + remote_tmp_dir + ' exists'
+      - creates_exists.output == []
 
-- name: skip for creates non-filesystem
+- name: Skip for creates non-filesystem
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
     creates: cert:\LocalMachine\*
+  when: is_windows # There's no builtin PSDrive that we cant test with on POSIX
   register: creates_non_fs
-  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
-- name: assert skip for creates non-filesystem
-  assert:
+- name: Assert skip for creates non-filesystem
+  ansible.builtin.assert:
     that:
-    - not creates_non_fs is changed
-    - creates_non_fs.msg == 'skipped, since cert:\LocalMachine\* exists'
-    - creates_non_fs.output == []
+      - not creates_non_fs is changed
+      - creates_non_fs.msg == 'skipped, since cert:\LocalMachine\* exists'
+      - creates_non_fs.output == []
   when: is_windows
 
-- name: skip if removes does not exist
+- name: Skip if removes does not exist
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
     removes: C:\Windows\Missing\file.txt
   register: removes_missing
 
-- name: assert skip if removes does not exist
-  assert:
+- name: Assert skip if removes does not exist
+  ansible.builtin.assert:
     that:
-    - not removes_missing is changed
-    - removes_missing.msg == 'skipped, since C:\\Windows\\Missing\\file.txt does not exist'
-    - removes_missing.output == []
+      - not removes_missing is changed
+      - removes_missing.msg == 'skipped, since C:\\Windows\\Missing\\file.txt does not exist'
+      - removes_missing.output == []
 
-- name: do not skip if removes exists
+- name: Do not skip if removes exists
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
-    removes: '{{ remote_tmp_dir }}'
+    removes: "{{ remote_tmp_dir }}"
   register: removes_exists
 
-- name: assert do not skip if removes exists
-  assert:
+- name: Assert do not skip if removes exists
+  ansible.builtin.assert:
     that:
-    - removes_exists is changed
-    - removes_exists.output == ['output']
+      - removes_exists is changed
+      - removes_exists.output == ['output']
 
-- name: do not skip if removes exists non-filesystem
+- name: Do not skip if removes exists non-filesystem
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: '"output"'
     removes: cert:\LocalMachine\*
+  when: is_windows # There's no builtin PSDrive that we cant test with on POSIX
   register: removes_exists_non_fs
-  when: is_windows  # There's no builtin PSDrive that we cant test with on POSIX
 
-- name: assert do not skip if removes exists non-filesystem
-  assert:
+- name: Assert do not skip if removes exists non-filesystem
+  ansible.builtin.assert:
     that:
-    - removes_exists_non_fs is changed
-    - removes_exists_non_fs.output == ['output']
+      - removes_exists_non_fs is changed
+      - removes_exists_non_fs.output == ['output']
   when: is_windows
 
-- name: script changed status
+- name: Script changed status
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: $Ansible.Changed = $false
   register: script_changed
 
-- name: assert script changed status
-  assert:
+- name: Assert script changed status
+  ansible.builtin.assert:
     that:
-    - not script_changed is changed
+      - not script_changed is changed
 
-- name: capture console output as host output
+- name: Capture console output as host output
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $poop = [Char]::ConvertFromUtf32(0x1F4A9)
       $Host.UI.WriteLine("host café $poop")
       $Host.UI.WriteErrorLine("error café $poop")
-
       $subProcessCommand = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes({
           $p = [Char]::ConvertFromUtf32(0x1F4A9)
-
           [Console]::Out.WriteLine("sub stdout café $p")
           [Console]::Error.WriteLine("sub stderr café $p")
       }.ToString()))
-
       # Calling a process directly goes to the output/error stream. Calling it with Start-Process with -NoNewWindow
       # means the sub process will inherit the current console handles and should be captured in the host output.
       $processParams = @{
@@ -854,64 +800,62 @@
           NoNewWindow = $true
       }
       Start-Process @processParams
-
       [Console]::Out.WriteLine("stdout café $poop")
       [Console]::Error.WriteLine("stderr café $poop")
   register: host_output
 
-- name: assert capture console output as host output
-  assert:
+- name: Assert capture console output as host output
+  ansible.builtin.assert:
     that:
-    - host_output is changed
-    - host_output.host_err.splitlines() == ['error café 💩', 'sub stderr café 💩', 'stderr café 💩']
-    - host_output.host_out.splitlines() == ['host café 💩', 'sub stdout café 💩', 'stdout café 💩']
-    - host_output.error == []
-    - host_output.output == []
-
+      - host_output is changed
+      - host_output.host_err.splitlines() == ['error café 💩', 'sub stderr café 💩', 'stderr café 💩']
+      - host_output.host_out.splitlines() == ['host café 💩', 'sub stdout café 💩', 'stdout café 💩']
+      - host_output.error == []
+      - host_output.output == []
 # Primitive types should strip out the ETS props to avoid recursive and deep nesting serializtion
 # problems. This replicates the behaviour of ConvertTo-Json in newer pwsh versions.
 # https://github.com/ansible-collections/ansible.windows/issues/360
-- name: output primitive types that contains heavily nested ETS properties
+
+- name: Output primitive types that contains heavily nested ETS properties
   win_powershell:
     script: |
-       $noteProp = New-Object -TypeName System.Management.Automation.PSNoteProperty -ArgumentList @(
-          'ETSProp', [type]
-       )
-       $str = "foo" | Write-Output
-       $str.PSObject.Properties.Add($noteProp)
-       $str
-
-       $int = 1 | Write-Output
-       $int.PSObject.Properties.Add($noteProp)
-       $int
+      $noteProp = New-Object -TypeName System.Management.Automation.PSNoteProperty -ArgumentList @(
+         'ETSProp', [type]
+      )
+      $str = "foo" | Write-Output
+      $str.PSObject.Properties.Add($noteProp)
+      $str
+      $int = 1 | Write-Output
+      $int.PSObject.Properties.Add($noteProp)
+      $int
   register: primitive_with_ets
 
-- name: assert output primitive types that contain heavily nested ETS properties
-  assert:
+- name: Assert output primitive types that contain heavily nested ETS properties
+  ansible.builtin.assert:
     that:
-    - primitive_with_ets is changed
-    - primitive_with_ets.error == []
-    - primitive_with_ets.output == ["foo", 1]
-
+      - primitive_with_ets is changed
+      - primitive_with_ets.error == []
+      - primitive_with_ets.output == ["foo", 1]
 # TargetObject on an error record needs to use Depth properly
 # https://github.com/ansible-collections/ansible.windows/issues/375
-- name: output error record target object with deeply nested values
+
+- name: Output error record target object with deeply nested values
   win_powershell:
     script: |
       Write-Error -Message err -TargetObject @{'1'=@{'2'=@{'3'=@{'4'=@{foo='bar'}}}}}
   register: err_nested_to
 
-- name: assert output error record target object with deeply nested values
-  assert:
+- name: Assert output error record target object with deeply nested values
+  ansible.builtin.assert:
     that:
-    - err_nested_to is changed
-    - err_nested_to.error | length == 1
-    # Depth is 2 so it will fully enumerate 2 objects deep and on the 3rd stringify the value
-    - "err_nested_to.error[0].target_object == {'1': {'2': {'3': 'System.Collections.Hashtable'}}}"
+      - err_nested_to is changed
+      - err_nested_to.error | length == 1
+      # Depth is 2 so it will fully enumerate 2 objects deep and on the 3rd stringify the value
+      - "err_nested_to.error[0].target_object == {'1': {'2': {'3': 'System.Collections.Hashtable'}}}"
 
-- name: run script that sets diff output
+- name: Run script that sets diff output
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $Ansible.Diff = @{
          before = @{
@@ -922,52 +866,49 @@
             nested = @{'1'=@{'2'=@{foo='bar'}}}
          }
       }
-
   register: diff
   diff: true
 
-- name: assert run script that sets diff output
-  assert:
+- name: Assert run script that sets diff output
+  ansible.builtin.assert:
     that:
-    - diff is changed
-    - "diff.diff.before == {'foo': 'foo'}"
-    - (diff.diff.after.keys() | sort) == ["foo", "nested"]
-    - diff.diff.after.foo == 'bar'
-    # Depth also controls the diff nesting
-    - "diff.diff.after.nested == {'1': {'2': 'System.Collections.Hashtable'}}"
+      - diff is changed
+      - "diff.diff.before == {'foo': 'foo'}"
+      - (diff.diff.after.keys() | sort) == ["foo", "nested"]
+      - diff.diff.after.foo == 'bar'
+      # Depth also controls the diff nesting
+      - "diff.diff.after.nested == {'1': {'2': 'System.Collections.Hashtable'}}"
 
-- name: run script with SecureString value
+- name: Run script with SecureString value
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       param ($SecureString1, $SecureString2)
-
       @{
           SecureString1 = [System.Net.NetworkCredential]::new('', $SecureString1).Password
           SecureString2 = [System.Net.NetworkCredential]::new('', $SecureString2).Password
       }
     sensitive_parameters:
-    - name: SecureString1
-      value: ''
-    - name: SecureString2
-      value: secret
+      - name: SecureString1
+        value: ""
+      - name: SecureString2
+        value: secret
   register: secure_string
 
-- name: assert run script with SecureString value
-  assert:
+- name: Assert run script with SecureString value
+  ansible.builtin.assert:
     that:
-    - secure_string.output[0].SecureString1 == ''
-    - secure_string.output[0].SecureString2 == 'secret'
+      - secure_string.output[0].SecureString1 == ''
+      - secure_string.output[0].SecureString2 == 'secret'
 
-- name: run script with omitted sensitive parameter (not bound)
+- name: Run script with omitted sensitive parameter (not bound)
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       param (
           [SecureString]$Password,
           [SecureString]$Other
       )
-
       @{
           PasswordIsNull = $null -eq $Password
           PasswordBound = $PSBoundParameters.ContainsKey('Password')
@@ -975,25 +916,24 @@
           OtherBound = $PSBoundParameters.ContainsKey('Other')
       }
     sensitive_parameters:
-    - name: Password
-    - name: Other
-      value: secret
+      - name: Password
+      - name: Other
+        value: secret
   register: null_secure_string
 
-- name: assert run script with omitted sensitive parameter (not bound)
-  assert:
+- name: Assert run script with omitted sensitive parameter (not bound)
+  ansible.builtin.assert:
     that:
-    - null_secure_string.output[0].PasswordIsNull == true
-    - null_secure_string.output[0].PasswordBound == false
-    - null_secure_string.output[0].OtherIsNull == false
-    - null_secure_string.output[0].OtherBound == true
+      - null_secure_string.output[0].PasswordIsNull == true
+      - null_secure_string.output[0].PasswordBound == false
+      - null_secure_string.output[0].OtherIsNull == false
+      - null_secure_string.output[0].OtherBound == true
 
-- name: run script with PSCredential value
+- name: Run script with PSCredential value
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       param ($Cred1, $Cred2)
-
       @{
           Cred1 = @{
               UserName = $Cred1.UserName
@@ -1005,25 +945,25 @@
           }
       }
     sensitive_parameters:
-    - name: Cred1
-      username: user1
-      password: ''
-    - name: Cred2
-      username: user2
-      password: secret
+      - name: Cred1
+        username: user1
+        password: ""
+      - name: Cred2
+        username: user2
+        password: secret
   register: pscredential
 
-- name: assert run script with SecureString value
-  assert:
+- name: Assert run script with SecureString value
+  ansible.builtin.assert:
     that:
-    - pscredential.output[0].Cred1.UserName == 'user1'
-    - pscredential.output[0].Cred1.Password == ''
-    - pscredential.output[0].Cred2.UserName == 'user2'
-    - pscredential.output[0].Cred2.Password == 'secret'
+      - pscredential.output[0].Cred1.UserName == 'user1'
+      - pscredential.output[0].Cred1.Password == ''
+      - pscredential.output[0].Cred2.UserName == 'user2'
+      - pscredential.output[0].Cred2.Password == 'secret'
 
-- name: get $Ansible.Result that exceeds the default serialization depth limit
+- name: Get $Ansible.Result that exceeds the default serialization depth limit
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     depth: 4
     script: |
       $Ansible.Result = [PSCustomObject]@{
@@ -1037,80 +977,78 @@
       }
   register: result_depth
 
-- name: assert get $Ansible.Result that exceeds the default serialization depth limit
-  assert:
+- name: Assert get $Ansible.Result that exceeds the default serialization depth limit
+  ansible.builtin.assert:
     that:
-    - result_depth is changed
-    - result_depth.result.One.Two.Three.Four == 'abc'
+      - result_depth is changed
+      - result_depth.result.One.Two.Three.Four == 'abc'
 
-- name: get WMI object
+- name: Get WMI object
   win_powershell:
     script: |
       Get-WmiObject -Class Win32_Service -Filter 'Name="WinRM"'
+  when:
+    - is_windows
+    - pwsh_executable is not defined
   register: wmi_object
-  when:
-  - is_windows
-  - pwsh_executable is not defined
 
-- name: assert get WMI object
-  assert:
+- name: Assert get WMI object
+  ansible.builtin.assert:
     that:
-    - wmi_object.output | length == 1
-    - wmi_object.output[0]['Name'] == 'WinRM'
-    - wmi_object.output[0]['__RELPATH'] == 'Win32_Service.Name="WinRM"'
+      - wmi_object.output | length == 1
+      - wmi_object.output[0]['Name'] == 'WinRM'
+      - wmi_object.output[0]['__RELPATH'] == 'Win32_Service.Name="WinRM"'
   when:
-  - is_windows
-  - pwsh_executable is not defined
+    - is_windows
+    - pwsh_executable is not defined
 
-- name: execute script from local path
+- name: Execute script from local path
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     path: test-script.ps1
     parameters:
       Name: café
   register: script_from_local_path
 
-- name: assert execute script from local path
-  assert:
+- name: Assert execute script from local path
+  ansible.builtin.assert:
     that:
-    - script_from_local_path is changed
-    - script_from_local_path.output[0]['Name'] == 'café'
-    - script_from_local_path.output[0]['Unicode'] == 'ü'
+      - script_from_local_path is changed
+      - script_from_local_path.output[0]['Name'] == 'café'
+      - script_from_local_path.output[0]['Unicode'] == 'ü'
 
-- name: execute script from remote path
+- name: Execute script from remote path
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
-    path: '{{ remote_tmp_dir }}\test-script.ps1'
+    executable: "{{ pwsh_executable | default(omit) }}"
+    path: "{{ remote_tmp_dir }}\\test-script.ps1"
     remote_src: true
     parameters:
       Name: café
   register: script_from_remote_path
 
-- name: assert execute script from local path
-  assert:
+- name: Assert execute script from local path
+  ansible.builtin.assert:
     that:
-    - script_from_remote_path is changed
-    - script_from_remote_path.output[0]['Name'] == 'café'
-    - script_from_remote_path.output[0]['Unicode'] == 'ü'
-
+      - script_from_remote_path is changed
+      - script_from_remote_path.output[0]['Name'] == 'café'
+      - script_from_remote_path.output[0]['Unicode'] == 'ü'
 # Tests that PowerShell/Runspace was created with
 # InitialSessionState.CreateDefault2() which ensures that any builtin modules
 # that have ETS definitions are imported correctly.
-- name: test builtin modules are imported correctly with ETS definitions
+
+- name: Test builtin modules are imported correctly with ETS definitions
   win_powershell:
-    executable: '{{ pwsh_executable | default(omit) }}'
+    executable: "{{ pwsh_executable | default(omit) }}"
     script: |
       $ErrorActionPreference = 'Stop'
-
       Import-Module -Name Microsoft.PowerShell.Security
-
       $typeData = Get-TypeData -TypeName System.Security.AccessControl.ObjectSecurity
       $typeData.Members.Count
+  when: is_windows # This ETS definition is only present on Windows
   register: builtin_module_ets
-  when: is_windows  # This ETS definition is only present on Windows
 
-- name: assert builtin modules are imported correctly with ETS definitions
-  assert:
+- name: Assert builtin modules are imported correctly with ETS definitions
+  ansible.builtin.assert:
     that:
-    - builtin_module_ets.output[0] > 0
+      - builtin_module_ets.output[0] > 0
   when: is_windows

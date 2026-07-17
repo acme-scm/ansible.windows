@@ -3,7 +3,7 @@
   ansible.windows.win_feature:
     name: DHCP
     state: present
-    include_management_tools: yes
+    include_management_tools: true
   register: dhcp_role
   check_mode: true
 

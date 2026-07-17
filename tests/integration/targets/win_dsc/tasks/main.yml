@@ -1,9 +1,10 @@
 ---
 # The existing DSC code only works for Windows PowerShell. PowerShell 7
 # requires DSC v3 which is not supported by this module.
-- name: check if running under Windows PowerShell
+
+- name: Check if running under Windows PowerShell
   ansible.windows.win_powershell:
-    script: '$PSVersionTable.PSVersion.ToString()'
+    script: $PSVersionTable.PSVersion.ToString()
   register: ps_version
 
 - name: Win_dsc test flow
@@ -15,9 +16,9 @@
         state: present
         scope: machine
         elements:
-          - '{{ remote_tmp_dir }}'
-
+          - "{{ remote_tmp_dir }}"
     # Needed so subsequent SSH session see the new PSModulePath env var
+
     - name: Restart sshd service
       ansible.windows.win_service:
         name: sshd
@@ -30,11 +31,10 @@
     - name: Copy custom DSC resources to remote temp dir
       ansible.windows.win_copy:
         src: files/
-        dest: '{{ remote_tmp_dir }}'
+        dest: "{{ remote_tmp_dir }}"
 
     - name: Run tests
       ansible.builtin.include_tasks: tests.yml
-
   always:
     - name: Remove remote tmp dir from PSModulePath
       ansible.windows.win_path:
@@ -42,4 +42,4 @@
         state: absent
         scope: machine
         elements:
-          - '{{ remote_tmp_dir }}'
+          - "{{ remote_tmp_dir }}"

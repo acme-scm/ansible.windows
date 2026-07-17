@@ -1,6 +1,6 @@
+---
 # Copyright (c) 2022 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 DOCUMENTATION:
   module: async_status
   short_description: Obtain status of asynchronous task
@@ -31,7 +31,7 @@ DOCUMENTATION:
       support: none
     check_mode:
       support: full
-      version_added: '2.4.0'
+      version_added: 2.4.0
     diff_mode:
       support: none
     bypass_host_loop:
@@ -41,14 +41,12 @@ DOCUMENTATION:
       platforms: windows
   author:
     - Ansible Core Team
-
 EXAMPLES: |
   - name: Asynchronous yum task
     ansible.windows.win_command: my.exe
     async: 1000
     poll: 0
     register: long_cmd
-
   - name: Wait for asynchronous job to end
     ansible.builtin.async_status:
       jid: '{{ long_cmd.ansible_job_id }}'
@@ -56,7 +54,6 @@ EXAMPLES: |
     until: job_result.finished
     retries: 100
     delay: 10
-
 RETURN:
   ansible_job_id:
     description: The asynchronous job id

@@ -1,6 +1,6 @@
+---
 # Copyright: (c) 2026, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 DOCUMENTATION:
   module: win_capability
   short_description: Manage Windows capabilities
@@ -23,22 +23,18 @@ DOCUMENTATION:
         - V(0) logs errors only
         - V(1) logs errors and warnings
         - V(2) logs errors, warnings, and information
-        - V(3) logs all of the previous plus debug output, only valid on
-          Windows 11 or Server 2025 or newer.
-        - This log is managed by DISM itself, the values allowed may change
-          with different versions of Windows.
+        - V(3) logs all of the previous plus debug output, only valid on Windows 11 or Server 2025 or newer.
+        - This log is managed by DISM itself, the values allowed may change with different versions of Windows.
       type: int
     log_path:
       description:
         - Specifies the full path and file name to log to.
-        - If not specified the logging uses the default DISM log file location
-          which is V(%WINDIR%\\Logs\\Dism\\dism.log).
+        - If not specified the logging uses the default DISM log file location which is V(%WINDIR%\\Logs\\Dism\\dism.log).
       type: path
     name:
       description:
         - A list of capability names to add or remove.
-        - Supports wildcard patterns like V(?) for single character matching
-          and V(*) for multiple character matching.
+        - Supports wildcard patterns like V(?) for single character matching and V(*) for multiple character matching.
       required: true
       type: list
       elements: str
@@ -58,9 +54,7 @@ DOCUMENTATION:
         - absent
         - present
   notes:
-    - Adding a capability requires the target user to have the
-      V(SeBatchLogonRight) user right. Use M(ansible.windows.win_user_right) to
-      manage this user right.
+    - Adding a capability requires the target user to have the V(SeBatchLogonRight) user right. Use M(ansible.windows.win_user_right) to manage this user right.
     - This module does not support Server 2016.
   extends_documentation_fragment:
     - ansible.builtin.action_common_attributes
@@ -76,35 +70,29 @@ DOCUMENTATION:
     - module: ansible.windows.win_capability_info
   author:
     - Jordan Borean (@jborean93)
-
 EXAMPLES: |
   - name: Install OpenSSH Client capability using short name
     ansible.windows.win_capability:
       name: OpenSSH.Client
       state: present
-
   - name: Install OpenSSH Client capability using full name
     ansible.windows.win_capability:
       name: OpenSSH.Client~~~~0.0.1.0
       state: present
-
   - name: Install both OpenSSH Client and OpenSSH Server capabilities using list
     ansible.windows.win_capability:
       name:
         - OpenSSH.Client
         - OpenSSH.Server
       state: present
-
   - name: Install both OpenSSH Client and OpenSSH Server capabilities using wildcard pattern
     ansible.windows.win_capability:
       name: OpenSSH.*
       state: present
-
   - name: Remove OpenSSH Client capability
     ansible.windows.win_capability:
       name: OpenSSH.Client
       state: absent
-
 RETURN:
   reboot_required:
     description:

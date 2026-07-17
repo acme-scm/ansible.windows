@@ -1,15 +1,15 @@
 ---
-- name: set fact of special testing dir
-  set_fact:
-    test_directory: '{{ remote_tmp_dir }}\{{ test_win_file_compression_suffix }}'
+- name: Set fact of special testing dir
+  ansible.builtin.set_fact:
+    test_directory: "{{ remote_tmp_dir }}\\{{ test_win_file_compression_suffix }}"
 
-- name: create sub directories
+- name: Create sub directories
   ansible.windows.win_file:
     state: directory
     path: "{{ test_directory }}\\{{ item }}"
   loop: "{{ test_win_file_compression_sub_directories }}"
 
-- name: set main directory as hidden to test out edge cases
+- name: Set main directory as hidden to test out edge cases
   ansible.windows.win_shell: (Get-Item -LiteralPath '{{ test_directory }}').Attributes = [System.IO.FileAttributes]::Hidden
 
 - name: Compress parent directory
@@ -23,18 +23,18 @@
     path: "{{ test_directory }}"
   register: folder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' in folder_info.stat.attributes"
-      - "result.changed == true"
+      - result.changed == true
 
 - name: Get actual attributes for sub directories
   ansible.windows.win_stat:
     path: "{{ test_directory }}\\{{ item }}"
-  register: subfolder_info
   loop: "{{ test_win_file_compression_sub_directories }}"
+  register: subfolder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' not in item.stat.attributes"
   loop: "{{ subfolder_info.results }}"
@@ -45,15 +45,15 @@
     state: present
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false
 
 - name: Compress parent directory and all subdirectories
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: present
-    recurse: yes
+    recurse: true
   register: result
 
 - name: Get actual attributes for parent directory
@@ -61,18 +61,18 @@
     path: "{{ test_directory }}"
   register: folder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' in folder_info.stat.attributes"
-      - "result.changed == true"
+      - result.changed == true
 
 - name: Get actual attributes for sub directories
   ansible.windows.win_stat:
     path: "{{ test_directory }}\\{{ item }}"
-  register: subfolder_info
   loop: "{{ test_win_file_compression_sub_directories }}"
+  register: subfolder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' in item.stat.attributes"
   loop: "{{ subfolder_info.results }}"
@@ -81,18 +81,18 @@
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: present
-    recurse: yes
+    recurse: true
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false
 
 - name: Uncompress parent directory
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: absent
-    recurse: no
+    recurse: false
   register: result
 
 - name: Get actual attributes for parent directory
@@ -100,18 +100,18 @@
     path: "{{ test_directory }}"
   register: folder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' not in folder_info.stat.attributes"
-      - "result.changed == true"
+      - result.changed == true
 
 - name: Get actual attributes for sub directories
   ansible.windows.win_stat:
     path: "{{ test_directory }}\\{{ item }}"
-  register: subfolder_info
   loop: "{{ test_win_file_compression_sub_directories }}"
+  register: subfolder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' in item.stat.attributes"
   loop: "{{ subfolder_info.results }}"
@@ -120,18 +120,18 @@
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: absent
-    recurse: no
+    recurse: false
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false
 
 - name: Uncompress parent directory and all subdirectories
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: absent
-    recurse: yes
+    recurse: true
   register: result
 
 - name: Get actual attributes for parent directory
@@ -139,18 +139,18 @@
     path: "{{ test_directory }}"
   register: folder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' not in folder_info.stat.attributes"
-      - "result.changed == true"
+      - result.changed == true
 
 - name: Get actual attributes for sub directories
   ansible.windows.win_stat:
     path: "{{ test_directory }}\\{{ item }}"
-  register: subfolder_info
   loop: "{{ test_win_file_compression_sub_directories }}"
+  register: subfolder_info
 
-- assert:
+- ansible.builtin.assert:
     that:
       - "'Compressed' not in item.stat.attributes"
   loop: "{{ subfolder_info.results }}"
@@ -159,12 +159,12 @@
   ansible.windows.win_file_compression:
     path: "{{ test_directory }}"
     state: absent
-    recurse: yes
+    recurse: true
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false
 
 - name: Create test file
   ansible.windows.win_file:
@@ -182,9 +182,9 @@
     path: "{{ test_directory }}\\{{ test_win_file_compression_filename }}"
   register: testfile_info
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == true"
+      - result.changed == true
       - "'Compressed' in testfile_info.stat.attributes"
 
 - name: Compress specific file (idempotent)
@@ -193,9 +193,9 @@
     state: present
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false
 
 - name: Uncompress specific file
   ansible.windows.win_file_compression:
@@ -208,9 +208,9 @@
     path: "{{ test_directory }}\\{{ test_win_file_compression_filename }}"
   register: testfile_info
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == true"
+      - result.changed == true
       - "'Compressed' not in testfile_info.stat.attributes"
 
 - name: Uncompress specific file (idempotent)
@@ -219,6 +219,6 @@
     state: absent
   register: result
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "result.changed == false"
+      - result.changed == false

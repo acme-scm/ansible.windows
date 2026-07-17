@@ -1,430 +1,492 @@
+---
 # (c) 2014, Chris Church <chris@ninemoreminutes.com>
 
-- name: test create user (check mode)
+- name: Test create user (check mode)
   win_user:
-    name: '{{ test_win_user_name }}'
-    password: '{{ test_win_user_password }}'
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password }}"
     fullname: Test User
     description: Test user account
     groups: Guests
-  check_mode: yes
   register: win_user_create_result_check
+  check_mode: true
 
-- name: assert test create user (check mode)
-  assert:
+- name: Assert test create user (check mode)
+  ansible.builtin.assert:
     that:
-    - win_user_create_result_check is changed
-    - win_user_create_result_check.state == 'present'
+      - win_user_create_result_check is changed
+      - win_user_create_result_check.state == 'present'
 
-- name: test create user
-  win_user: name="{{ test_win_user_name }}" password="{{ test_win_user_password }}" fullname="Test User" description="Test user account" groups="Guests"
-  register: win_user_create_result
-
-- name: check user creation result
-  assert:
-    that:
-      - "win_user_create_result is changed"
-      - "win_user_create_result.name == test_win_user_name"
-      - "win_user_create_result.fullname == 'Test User'"
-      - "win_user_create_result.description == 'Test user account'"
-      - "win_user_create_result.path is defined"
-      - "win_user_create_result.state == 'present'"
-
-- name: test create user (idempotent)
+- name: Test create user
   win_user:
-    name: '{{ test_win_user_name }}'
-    password: '{{ test_win_user_password }}'
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password }}"
     fullname: Test User
     description: Test user account
-    groups: guests  # Makes sure we aren't doing case sensitive checks
+    groups: Guests
+  register: win_user_create_result
+
+- name: Check user creation result
+  ansible.builtin.assert:
+    that:
+      - win_user_create_result is changed
+      - win_user_create_result.name == test_win_user_name
+      - win_user_create_result.fullname == 'Test User'
+      - win_user_create_result.description == 'Test user account'
+      - win_user_create_result.path is defined
+      - win_user_create_result.state == 'present'
+
+- name: Test create user (idempotent)
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password }}"
+    fullname: Test User
+    description: Test user account
+    groups: guests # Makes sure we aren't doing case sensitive checks
   register: win_user_create_result_again
 
-- name: assert test create user (idempotent)
-  assert:
+- name: Assert test create user (idempotent)
+  ansible.builtin.assert:
     that:
-    - not win_user_create_result_again is changed
+      - not win_user_create_result_again is changed
 
-- name: update user full name and description (check mode)
+- name: Update user full name and description (check mode)
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     fullname: Test user
     description: Test User Account
     groups: []
-  check_mode: yes
   register: win_user_update_result_check
+  check_mode: true
 
-- name: assert update user full name and description (check mode)
-  assert:
+- name: Assert update user full name and description (check mode)
+  ansible.builtin.assert:
     that:
-    - win_user_update_result_check is changed
-    - win_user_update_result_check.fullname == 'Test User'
-    - win_user_update_result_check.description == 'Test user account'
-    - win_user_update_result_check.groups | length == 1
+      - win_user_update_result_check is changed
+      - win_user_update_result_check.fullname == 'Test User'
+      - win_user_update_result_check.description == 'Test user account'
+      - win_user_update_result_check.groups | length == 1
 
-- name: update user full name and description
+- name: Update user full name and description
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     fullname: Test user
     description: Test User Account
     groups: []
   register: win_user_update_result
 
-- name: check full name and description update result
-  assert:
+- name: Check full name and description update result
+  ansible.builtin.assert:
     that:
-    - win_user_update_result is changed
-    - win_user_update_result.fullname == 'Test user'
-    - win_user_update_result.description == 'Test User Account'
-    - win_user_update_result.groups == []
+      - win_user_update_result is changed
+      - win_user_update_result.fullname == 'Test user'
+      - win_user_update_result.description == 'Test User Account'
+      - win_user_update_result.groups == []
 
-- name: test again with no options or changes
-  win_user: name="{{ test_win_user_name }}"
+- name: Test again with no options or changes
+  win_user:
+    name: "{{ test_win_user_name }}"
   register: win_user_nochange_result
 
-- name: check no changes result
-  assert:
+- name: Check no changes result
+  ansible.builtin.assert:
     that:
-      - "win_user_nochange_result is not changed"
+      - win_user_nochange_result is not changed
 
-- name: test again with query state
-  win_user: name="{{ test_win_user_name }}" state="query"
+- name: Test again with query state
+  win_user:
+    name: "{{ test_win_user_name }}"
+    state: query
   register: win_user_query_result
 
-- name: check query result
-  assert:
+- name: Check query result
+  ansible.builtin.assert:
     that:
-      - "win_user_query_result is not changed"
+      - win_user_query_result is not changed
       - win_user_query_result.msg == "Querying user '" + test_win_user_name + "'"
-      - "win_user_query_result.state == 'present'"
-      - "win_user_query_result.name == test_win_user_name"
-      - "win_user_query_result.fullname == 'Test user'"
-      - "win_user_query_result.description == 'Test User Account'"
-      - "win_user_query_result.path is defined"
-      - "win_user_query_result.sid is defined"
-      - "win_user_query_result.groups == []"
+      - win_user_query_result.state == 'present'
+      - win_user_query_result.name == test_win_user_name
+      - win_user_query_result.fullname == 'Test user'
+      - win_user_query_result.description == 'Test User Account'
+      - win_user_query_result.path is defined
+      - win_user_query_result.sid is defined
+      - win_user_query_result.groups == []
 
-- name: change user password (check mode)
+- name: Change user password (check mode)
   win_user:
-    name: '{{ test_win_user_name }}'
-    password: '{{ test_win_user_password2 }}'
-  check_mode: yes
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
   register: win_user_password_result_check
+  check_mode: true
 
-- name: assert change user password (check mode)
-  assert:
+- name: Assert change user password (check mode)
+  ansible.builtin.assert:
     that:
-    - win_user_password_result_check is changed
+      - win_user_password_result_check is changed
 
-- name: change user password
-  win_user: name="{{ test_win_user_name }}" password="{{ test_win_user_password2 }}"
+- name: Change user password
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
   register: win_user_password_result
 
-- name: check password change result
-  assert:
+- name: Check password change result
+  ansible.builtin.assert:
     that:
-      - "win_user_password_result is changed"
+      - win_user_password_result is changed
 
-- name: change user password again to same value
-  win_user: name="{{ test_win_user_name }}" password="{{ test_win_user_password2 }}"
+- name: Change user password again to same value
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
   register: win_user_password_result_again
 
-- name: check password change result again
-  assert:
+- name: Check password change result again
+  ansible.builtin.assert:
     that:
-      - "win_user_password_result_again is not changed"
+      - win_user_password_result_again is not changed
 
-- name: check update_password=on_create for existing user
-  win_user: name="{{ test_win_user_name }}" password="ThisP@ssW0rdShouldNotBeUsed" update_password=on_create
+- name: Check update_password=on_create for existing user
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: ThisP@ssW0rdShouldNotBeUsed
+    update_password: on_create
   register: win_user_nopasschange_result
 
-- name: check password change with on_create flag result
-  assert:
+- name: Check password change with on_create flag result
+  ansible.builtin.assert:
     that:
-      - "win_user_nopasschange_result is not changed"
+      - win_user_nopasschange_result is not changed
 
-- name: set password expired flag
-  win_user: name="{{ test_win_user_name }}" password_expired=yes
+- name: Set password expired flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password_expired: "yes"
   register: win_user_password_expired_result
 
-- name: check password expired result
-  assert:
+- name: Check password expired result
+  ansible.builtin.assert:
     that:
-      - "win_user_password_expired_result is changed"
-      - "win_user_password_expired_result.password_expired"
+      - win_user_password_expired_result is changed
+      - win_user_password_expired_result.password_expired
 
-- name: set password when expired
-  win_user: name="{{ test_win_user_name }}" password={{ test_win_user_password2 }} update_password=always
+- name: Set password when expired
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
+    update_password: always
   register: win_user_can_set_password_on_expired
 
-- name: check set password on expired result
-  assert:
+- name: Check set password on expired result
+  ansible.builtin.assert:
     that:
       - win_user_can_set_password_on_expired is changed
 
-- name: set password expired flag again
-  win_user: name="{{ test_win_user_name }}" password_expired=yes
+- name: Set password expired flag again
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password_expired: "yes"
   register: win_user_password_expired_result
 
-- name: check password expired result
-  assert:
+- name: Check password expired result
+  ansible.builtin.assert:
     that:
-      - "win_user_password_expired_result is changed"
-      - "win_user_password_expired_result.password_expired"
+      - win_user_password_expired_result is changed
+      - win_user_password_expired_result.password_expired
 
-- name: clear password expired flag
-  win_user: name="{{ test_win_user_name }}" password_expired=no
+- name: Clear password expired flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password_expired: "no"
   register: win_user_clear_password_expired_result
 
-- name: check clear password expired result
-  assert:
+- name: Check clear password expired result
+  ansible.builtin.assert:
     that:
-      - "win_user_clear_password_expired_result is changed"
-      - "not win_user_clear_password_expired_result.password_expired"
+      - win_user_clear_password_expired_result is changed
+      - not win_user_clear_password_expired_result.password_expired
 
-- name: set password never expires flag
-  win_user: name="{{ test_win_user_name }}" password_never_expires=yes
+- name: Set password never expires flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password_never_expires: "yes"
   register: win_user_password_never_expires_result
 
-- name: check password never expires result
-  assert:
+- name: Check password never expires result
+  ansible.builtin.assert:
     that:
-      - "win_user_password_never_expires_result is changed"
-      - "win_user_password_never_expires_result.password_never_expires"
+      - win_user_password_never_expires_result is changed
+      - win_user_password_never_expires_result.password_never_expires
 
-- name: clear password never expires flag
-  win_user: name="{{ test_win_user_name }}" password_never_expires=no
+- name: Clear password never expires flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password_never_expires: "no"
   register: win_user_clear_password_never_expires_result
 
-- name: check clear password never expires result
-  assert:
+- name: Check clear password never expires result
+  ansible.builtin.assert:
     that:
-      - "win_user_clear_password_never_expires_result is changed"
-      - "not win_user_clear_password_never_expires_result.password_never_expires"
+      - win_user_clear_password_never_expires_result is changed
+      - not win_user_clear_password_never_expires_result.password_never_expires
 
-- name: set user cannot change password flag
-  win_user: name="{{ test_win_user_name }}" user_cannot_change_password=yes
+- name: Set user cannot change password flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    user_cannot_change_password: "yes"
   register: win_user_cannot_change_password_result
 
-- name: check user cannot change password result
-  assert:
+- name: Check user cannot change password result
+  ansible.builtin.assert:
     that:
-      - "win_user_cannot_change_password_result is changed"
-      - "win_user_cannot_change_password_result.user_cannot_change_password"
+      - win_user_cannot_change_password_result is changed
+      - win_user_cannot_change_password_result.user_cannot_change_password
 
-- name: clear user cannot change password flag
-  win_user: name="{{ test_win_user_name }}" user_cannot_change_password=no
+- name: Clear user cannot change password flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    user_cannot_change_password: "no"
   register: win_user_can_change_password_result
 
-- name: check clear user cannot change password result
-  assert:
+- name: Check clear user cannot change password result
+  ansible.builtin.assert:
     that:
-      - "win_user_can_change_password_result is changed"
-      - "not win_user_can_change_password_result.user_cannot_change_password"
+      - win_user_can_change_password_result is changed
+      - not win_user_can_change_password_result.user_cannot_change_password
 
-- name: set account disabled flag
-  win_user: name="{{ test_win_user_name }}" account_disabled=true
+- name: Set account disabled flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    account_disabled: "true"
   register: win_user_account_disabled_result
 
-- name: check account disabled result
-  assert:
+- name: Check account disabled result
+  ansible.builtin.assert:
     that:
-      - "win_user_account_disabled_result is changed"
-      - "win_user_account_disabled_result.account_disabled"
+      - win_user_account_disabled_result is changed
+      - win_user_account_disabled_result.account_disabled
 
-- name: set password on disabled account
-  win_user: name="{{ test_win_user_name }}" password={{ test_win_user_password2 }} update_password=always
+- name: Set password on disabled account
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
+    update_password: always
   register: win_user_can_set_password_on_disabled
 
-- name: check set password on disabled result
-  assert:
+- name: Check set password on disabled result
+  ansible.builtin.assert:
     that:
       - win_user_can_set_password_on_disabled is changed
       - win_user_can_set_password_on_disabled.account_disabled
 
-- name: clear account disabled flag
-  win_user: name="{{ test_win_user_name }}" account_disabled=false
+- name: Clear account disabled flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    account_disabled: "false"
   register: win_user_clear_account_disabled_result
 
-- name: check clear account disabled result
-  assert:
+- name: Check clear account disabled result
+  ansible.builtin.assert:
     that:
-      - "win_user_clear_account_disabled_result is changed"
-      - "not win_user_clear_account_disabled_result.account_disabled"
+      - win_user_clear_account_disabled_result is changed
+      - not win_user_clear_account_disabled_result.account_disabled
 
-- name: attempt to set account locked flag
-  win_user: name="{{ test_win_user_name }}" account_locked=yes
+- name: Attempt to set account locked flag
+  win_user:
+    name: "{{ test_win_user_name }}"
+    account_locked: "yes"
   register: win_user_set_account_locked_result
   ignore_errors: true
 
-- name: verify that attempting to set account locked flag fails
-  assert:
+- name: Verify that attempting to set account locked flag fails
+  ansible.builtin.assert:
     that:
-      - "win_user_set_account_locked_result is failed"
-      - "win_user_set_account_locked_result is not changed"
+      - win_user_set_account_locked_result is failed
+      - win_user_set_account_locked_result is not changed
 
-- name: attempt to lockout test account
-  script: lockout_user.ps1 "{{ test_win_user_name }}"
+- name: Attempt to lockout test account
+  ansible.builtin.script:
+    cmd: lockout_user.ps1 "{{ test_win_user_name }}"
 
-- name: get user to check if account locked flag is set
-  win_user: name="{{ test_win_user_name }}" state="query"
-  register: win_user_account_locked_result
-
-- name: clear account locked flag if set
-  win_user: name="{{ test_win_user_name }}" account_locked=no
-  register: win_user_clear_account_locked_result
-  when: "win_user_account_locked_result.account_locked"
-
-- name: check clear account lockout result if account was locked
-  assert:
-    that:
-      - "win_user_clear_account_locked_result is changed"
-      - "not win_user_clear_account_locked_result.account_locked"
-  when: "win_user_account_locked_result.account_locked"
-
-- name: assign test user to a group (check mode)
-  win_user:
-    name: '{{ test_win_user_name }}'
-    groups:
-    - Users
-  check_mode: yes
-  register: win_user_replace_group_result_check
-
-- name: assert assign test user to a group (check mode)
-  assert:
-    that:
-    - win_user_replace_group_result_check is changed
-    - win_user_replace_group_result_check.groups == []
-
-- name: assign test user to a group
-  win_user: name="{{ test_win_user_name }}" groups="Users"
-  register: win_user_replace_groups_result
-
-- name: check assign user to group result
-  assert:
-    that:
-      - "win_user_replace_groups_result is changed"
-      - "win_user_replace_groups_result.groups|length == 1"
-      - "win_user_replace_groups_result.groups[0]['name'] == 'Users'"
-
-- name: assign test user to the same group
+- name: Get user to check if account locked flag is set
   win_user:
     name: "{{ test_win_user_name }}"
-    groups: ["Users"]
+    state: query
+  register: win_user_account_locked_result
+
+- name: Clear account locked flag if set
+  win_user:
+    name: "{{ test_win_user_name }}"
+    account_locked: "no"
+  when: win_user_account_locked_result.account_locked
+  register: win_user_clear_account_locked_result
+
+- name: Check clear account lockout result if account was locked
+  ansible.builtin.assert:
+    that:
+      - win_user_clear_account_locked_result is changed
+      - not win_user_clear_account_locked_result.account_locked
+  when: win_user_account_locked_result.account_locked
+
+- name: Assign test user to a group (check mode)
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups:
+      - Users
+  register: win_user_replace_group_result_check
+  check_mode: true
+
+- name: Assert assign test user to a group (check mode)
+  ansible.builtin.assert:
+    that:
+      - win_user_replace_group_result_check is changed
+      - win_user_replace_group_result_check.groups == []
+
+- name: Assign test user to a group
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: Users
+  register: win_user_replace_groups_result
+
+- name: Check assign user to group result
+  ansible.builtin.assert:
+    that:
+      - win_user_replace_groups_result is changed
+      - win_user_replace_groups_result.groups|length == 1
+      - win_user_replace_groups_result.groups[0]['name'] == 'Users'
+
+- name: Assign test user to the same group
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: [Users]
   register: win_user_replace_groups_again_result
 
-- name: check assign user to group again result
-  assert:
+- name: Check assign user to group again result
+  ansible.builtin.assert:
     that:
-      - "win_user_replace_groups_again_result is not changed"
+      - win_user_replace_groups_again_result is not changed
 
-- name: add user to another group
-  win_user: name="{{ test_win_user_name }}" groups="S-1-5-32-547" groups_action="add"
+- name: Add user to another group
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: S-1-5-32-547
+    groups_action: add
   register: win_user_add_groups_result
 
-- name: check add user to another group result
-  assert:
+- name: Check add user to another group result
+  ansible.builtin.assert:
     that:
-      - "win_user_add_groups_result is changed"
-      - "win_user_add_groups_result.groups|length == 2"
-      - "win_user_add_groups_result.groups[0]['name'] in ('Users', 'Power Users')"
-      - "win_user_add_groups_result.groups[1]['name'] in ('Users', 'Power Users')"
+      - win_user_add_groups_result is changed
+      - win_user_add_groups_result.groups|length == 2
+      - win_user_add_groups_result.groups[0]['name'] in ('Users', 'Power Users')
+      - win_user_add_groups_result.groups[1]['name'] in ('Users', 'Power Users')
 
-- name: add user to another group again
+- name: Add user to another group again
   win_user:
     name: "{{ test_win_user_name }}"
     groups: S-1-5-32-547
     groups_action: add
   register: win_user_add_groups_again_result
 
-- name: check add user to another group again result
-  assert:
+- name: Check add user to another group again result
+  ansible.builtin.assert:
     that:
-      - "win_user_add_groups_again_result is not changed"
+      - win_user_add_groups_again_result is not changed
 
-- name: remove user from a group
-  win_user: name="{{ test_win_user_name }}" groups="Users" groups_action="remove"
+- name: Remove user from a group
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: Users
+    groups_action: remove
   register: win_user_remove_groups_result
 
-- name: check remove user from group result
-  assert:
+- name: Check remove user from group result
+  ansible.builtin.assert:
     that:
-      - "win_user_remove_groups_result is changed"
-      - "win_user_remove_groups_result.groups|length == 1"
-      - "win_user_remove_groups_result.groups[0]['name'] == 'Power Users'"
+      - win_user_remove_groups_result is changed
+      - win_user_remove_groups_result.groups|length == 1
+      - win_user_remove_groups_result.groups[0]['name'] == 'Power Users'
 
-- name: remove user from a group again
+- name: Remove user from a group again
   win_user:
     name: "{{ test_win_user_name }}"
     groups:
-      - "Users"
+      - Users
     groups_action: remove
   register: win_user_remove_groups_again_result
 
-- name: check remove user from group again result
-  assert:
+- name: Check remove user from group again result
+  ansible.builtin.assert:
     that:
-      - "win_user_remove_groups_again_result is not changed"
+      - win_user_remove_groups_again_result is not changed
 
-- name: reassign test user to multiple groups
-  win_user: name="{{ test_win_user_name }}" groups="Users, Guests" groups_action="replace"
+- name: Reassign test user to multiple groups
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: Users, Guests
+    groups_action: replace
   register: win_user_reassign_groups_result
 
-- name: check reassign user groups result
-  assert:
+- name: Check reassign user groups result
+  ansible.builtin.assert:
     that:
-      - "win_user_reassign_groups_result is changed"
-      - "win_user_reassign_groups_result.groups|length == 2"
-      - "win_user_reassign_groups_result.groups[0]['name'] in ('Users', 'Guests')"
-      - "win_user_reassign_groups_result.groups[1]['name'] in ('Users', 'Guests')"
+      - win_user_reassign_groups_result is changed
+      - win_user_reassign_groups_result.groups|length == 2
+      - win_user_reassign_groups_result.groups[0]['name'] in ('Users', 'Guests')
+      - win_user_reassign_groups_result.groups[1]['name'] in ('Users', 'Guests')
 
-- name: reassign test user to multiple groups again
+- name: Reassign test user to multiple groups again
   win_user:
     name: "{{ test_win_user_name }}"
     groups:
-      - "Users"
-      - "Guests"
+      - Users
+      - Guests
     groups_action: replace
   register: win_user_reassign_groups_again_result
 
-- name: check reassign user groups again result
-  assert:
+- name: Check reassign user groups again result
+  ansible.builtin.assert:
     that:
-      - "win_user_reassign_groups_again_result is not changed"
+      - win_user_reassign_groups_again_result is not changed
 
-- name: remove user from all groups
-  win_user: name="{{ test_win_user_name }}" groups=""
+- name: Remove user from all groups
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: ""
   register: win_user_remove_all_groups_result
 
-- name: check remove user from all groups result
-  assert:
+- name: Check remove user from all groups result
+  ansible.builtin.assert:
     that:
-      - "win_user_remove_all_groups_result is changed"
-      - "win_user_remove_all_groups_result.groups|length == 0"
+      - win_user_remove_all_groups_result is changed
+      - win_user_remove_all_groups_result.groups|length == 0
 
-- name: remove user from all groups again
+- name: Remove user from all groups again
   win_user:
     name: "{{ test_win_user_name }}"
     groups: []
   register: win_user_remove_all_groups_again_result
 
-- name: check remove user from all groups again result
-  assert:
+- name: Check remove user from all groups again result
+  ansible.builtin.assert:
     that:
-      - "win_user_remove_all_groups_again_result is not changed"
+      - win_user_remove_all_groups_again_result is not changed
 
-- name: assign user to invalid group
-  win_user: name="{{ test_win_user_name }}" groups="Userz"
+- name: Assign user to invalid group
+  win_user:
+    name: "{{ test_win_user_name }}"
+    groups: Userz
   register: win_user_invalid_group_result
   ignore_errors: true
 
-- name: check invalid group result
-  assert:
+- name: Check invalid group result
+  ansible.builtin.assert:
     that:
-      - "win_user_invalid_group_result is failed"
-      - "win_user_invalid_group_result.msg is defined"
+      - win_user_invalid_group_result is failed
+      - win_user_invalid_group_result.msg is defined
       - win_user_invalid_group_result.msg is match("group 'Userz' not found")
 
-- name: get expected dates based on remote timezone
+- name: Get expected dates based on remote timezone
   win_powershell:
     script: |
       [DateTime]::new(2040, 10, 27, 0, 0, 0, [DateTimeKind]::Utc).ToLocalTime()
@@ -435,245 +497,253 @@
         (New-TimeSpan -Hours 2)).UtcDateTime.ToLocalTime()
   register: expected_dates
 
-- name: expect failure when account_expires is invalid
+- name: Expect failure when account_expires is invalid
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     account_expires: invalid
-  register: account_expires_invalid
   failed_when:
-  - >-
-    account_expires_invalid.msg != "Failed to parse account_expires as datetime string. Expecting datetime in yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss.FFFFFFFK format."
+    - >-
+      account_expires_invalid.msg != "Failed to parse account_expires as datetime string. Expecting datetime in yyyy-MM-dd or yyyy-MM-ddTHH:mm:ss.FFFFFFFK format."
+  register: account_expires_invalid
 
-- name: set account expiration date - short form
+- name: Set account expiration date - short form
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27"
   register: account_expires_short_result
 
-- name: get result of set account expiration date - short form
+- name: Get result of set account expiration date - short form
   win_powershell:
     script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
     parameters:
-      Name: '{{ test_win_user_name }}'
+      Name: "{{ test_win_user_name }}"
   register: account_expires_short_result_actual
 
-- name: assert set account expiration date - short form
-  assert:
+- name: Assert set account expiration date - short form
+  ansible.builtin.assert:
     that:
-    - account_expires_short_result is changed
-    - account_expires_short_result_actual.output == [expected_dates.output[0]]
+      - account_expires_short_result is changed
+      - account_expires_short_result_actual.output == [expected_dates.output[0]]
 
-- name: set account expiration date - short form - idempotent
+- name: Set account expiration date - short form - idempotent
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27"
   register: account_expires_short_result_again
 
-- name: assert set account expiration date - short form - idempotent
-  assert:
+- name: Assert set account expiration date - short form - idempotent
+  ansible.builtin.assert:
     that:
-    - not account_expires_short_result_again is changed
+      - not account_expires_short_result_again is changed
 
-- name: set account expiration date - long form
+- name: Set account expiration date - long form
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T14:30:00'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27T14:30:00"
   register: account_expires_long_result
 
-- name: get result of set account expiration date - long form
+- name: Get result of set account expiration date - long form
   win_powershell:
     script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
     parameters:
-      Name: '{{ test_win_user_name }}'
+      Name: "{{ test_win_user_name }}"
   register: account_expires_long_result_actual
 
-- name: assert set account expiration date - long form
-  assert:
+- name: Assert set account expiration date - long form
+  ansible.builtin.assert:
     that:
-    - account_expires_long_result is changed
-    - account_expires_long_result_actual.output == [expected_dates.output[1]]
+      - account_expires_long_result is changed
+      - account_expires_long_result_actual.output == [expected_dates.output[1]]
 
-- name: set account expiration date - long form - idempotent
+- name: Set account expiration date - long form - idempotent
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T14:30:00'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27T14:30:00"
   register: account_expires_long_result_again
 
-- name: assert set account expiration date - long form - idempotent
-  assert:
+- name: Assert set account expiration date - long form - idempotent
+  ansible.builtin.assert:
     that:
-    - not account_expires_long_result_again is changed
+      - not account_expires_long_result_again is changed
 
-- name: set account expiration date - long form with Z
+- name: Set account expiration date - long form with Z
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T13:30:00Z'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27T13:30:00Z"
   register: account_expires_long_z_result
 
-- name: get result of set account expiration date - long form with Z
+- name: Get result of set account expiration date - long form with Z
   win_powershell:
     script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
     parameters:
-      Name: '{{ test_win_user_name }}'
+      Name: "{{ test_win_user_name }}"
   register: account_expires_long_z_result_actual
 
-- name: assert set account expiration date - long form with Z
-  assert:
+- name: Assert set account expiration date - long form with Z
+  ansible.builtin.assert:
     that:
-    - account_expires_long_z_result is changed
-    - account_expires_long_z_result_actual.output == [expected_dates.output[2]]
+      - account_expires_long_z_result is changed
+      - account_expires_long_z_result_actual.output == [expected_dates.output[2]]
 
-- name: set account expiration date - long form with Z - idempotent
+- name: Set account expiration date - long form with Z - idempotent
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T13:30:00Z'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27T13:30:00Z"
   register: account_expires_long_z_result_again
 
-- name: assert set account expiration date - long form - idempotent
-  assert:
+- name: Assert set account expiration date - long form - idempotent
+  ansible.builtin.assert:
     that:
-    - not account_expires_long_result_again is changed
+      - not account_expires_long_result_again is changed
 
-- name: set account expiration date - long form with tz
+- name: Set account expiration date - long form with tz
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T14:30:00+0200'
+    name: "{{ test_win_user_name }}"
+    account_expires: 2040-10-27T14:30:00+0200
   register: account_expires_long_tz_result
 
-- name: get result of set account expiration date - long form with tz
+- name: Get result of set account expiration date - long form with tz
   win_powershell:
     script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
     parameters:
-      Name: '{{ test_win_user_name }}'
+      Name: "{{ test_win_user_name }}"
   register: account_expires_long_tz_result_actual
 
-- name: assert set account expiration date - long form with tz
-  assert:
+- name: Assert set account expiration date - long form with tz
+  ansible.builtin.assert:
     that:
-    - account_expires_long_tz_result is changed
-    - account_expires_long_tz_result_actual.output == [expected_dates.output[3]]
+      - account_expires_long_tz_result is changed
+      - account_expires_long_tz_result_actual.output == [expected_dates.output[3]]
 
-- name: set account expiration date - long form with tz - idempotent
+- name: Set account expiration date - long form with tz - idempotent
   win_user:
-    name: '{{ test_win_user_name }}'
-    account_expires: '2040-10-27T14:30:00+02:00'
+    name: "{{ test_win_user_name }}"
+    account_expires: "2040-10-27T14:30:00+02:00"
   register: account_expires_long_tz_result_again
 
-- name: assert set account expiration date - long form with tz - idempotent
-  assert:
+- name: Assert set account expiration date - long form with tz - idempotent
+  ansible.builtin.assert:
     that:
-    - not account_expires_long_tz_result_again is changed
+      - not account_expires_long_tz_result_again is changed
 
-- name: remove account expiration date
+- name: Remove account expiration date
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     account_expires: never
   register: account_expires_remove_result
 
-- name: get result of remove account expiration date
+- name: Get result of remove account expiration date
   win_powershell:
     script: param ($Name); Get-LocalUser -Name $Name | Select-Object -ExpandProperty AccountExpires
     parameters:
-      Name: '{{ test_win_user_name }}'
+      Name: "{{ test_win_user_name }}"
   register: account_expires_remove_result_actual
 
-- name: assert remove account expiration date
-  assert:
+- name: Assert remove account expiration date
+  ansible.builtin.assert:
     that:
-    - account_expires_remove_result is changed
-    - account_expires_remove_result_actual.output == []
+      - account_expires_remove_result is changed
+      - account_expires_remove_result_actual.output == []
 
-- name: remove account expiration date - idempotent
+- name: Remove account expiration date - idempotent
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     account_expires: never
   register: account_expires_remove_result_again
 
-- name: assert remove account expiration date - idempotent
-  assert:
+- name: Assert remove account expiration date - idempotent
+  ansible.builtin.assert:
     that:
-    - not account_expires_remove_result_again is changed
+      - not account_expires_remove_result_again is changed
 
-- name: remove existing test user if present (check mode)
+- name: Remove existing test user if present (check mode)
   win_user:
-    name: '{{ test_win_user_name }}'
+    name: "{{ test_win_user_name }}"
     state: absent
-  check_mode: yes
   register: win_user_remove_result_check
+  check_mode: true
 
-- name: assert remove existing test user if present (check mode)
-  assert:
+- name: Assert remove existing test user if present (check mode)
+  ansible.builtin.assert:
     that:
-    - win_user_remove_result_check is changed
-    - win_user_remove_result_check.state == 'absent'
+      - win_user_remove_result_check is changed
+      - win_user_remove_result_check.state == 'absent'
 
-- name: remove existing test user if present
-  win_user: name="{{ test_win_user_name }}" state="absent"
+- name: Remove existing test user if present
+  win_user:
+    name: "{{ test_win_user_name }}"
+    state: absent
   register: win_user_remove_result
 
-- name: check user removal result
-  assert:
+- name: Check user removal result
+  ansible.builtin.assert:
     that:
       - win_user_remove_result is changed
-      - "win_user_remove_result.name is defined"
-      - "win_user_remove_result.state == 'absent'"
+      - win_user_remove_result.name is defined
+      - win_user_remove_result.state == 'absent'
 
-- name: try to remove test user again
-  win_user: name="{{ test_win_user_name }}" state="absent"
+- name: Try to remove test user again
+  win_user:
+    name: "{{ test_win_user_name }}"
+    state: absent
   register: win_user_remove_result_again
 
-- name: check user removal result again
-  assert:
+- name: Check user removal result again
+  ansible.builtin.assert:
     that:
-      - "win_user_remove_result_again is not changed"
-      - "win_user_remove_result_again.name is defined"
-      - "win_user_remove_result_again.msg is defined"
-      - "win_user_remove_result.state == 'absent'"
+      - win_user_remove_result_again is not changed
+      - win_user_remove_result_again.name is defined
+      - win_user_remove_result_again.msg is defined
+      - win_user_remove_result.state == 'absent'
 
-- name: test missing user with query state
-  win_user: name="{{ test_win_user_name }}" state="query"
+- name: Test missing user with query state
+  win_user:
+    name: "{{ test_win_user_name }}"
+    state: query
   register: win_user_missing_query_result
 
-- name: check missing query result
-  assert:
+- name: Check missing query result
+  ansible.builtin.assert:
     that:
-      - "win_user_missing_query_result is not changed"
-      - "win_user_missing_query_result.name is defined"
-      - "win_user_missing_query_result.msg is defined"
-      - "win_user_missing_query_result.state == 'absent'"
+      - win_user_missing_query_result is not changed
+      - win_user_missing_query_result.name is defined
+      - win_user_missing_query_result.msg is defined
+      - win_user_missing_query_result.state == 'absent'
 
-- name: test removed user with query state
-  win_user: name="{{ test_win_user_name }}" state="query"
+- name: Test removed user with query state
+  win_user:
+    name: "{{ test_win_user_name }}"
+    state: query
   register: win_user_removed_query_result
 
-- name: check removed query result
-  assert:
+- name: Check removed query result
+  ansible.builtin.assert:
     that:
-      - "win_user_removed_query_result is not changed"
-      - "win_user_removed_query_result.name is defined"
-      - "win_user_removed_query_result.msg is defined"
-      - "win_user_removed_query_result.state == 'absent'"
-
+      - win_user_removed_query_result is not changed
+      - win_user_removed_query_result.name is defined
+      - win_user_removed_query_result.msg is defined
+      - win_user_removed_query_result.state == 'absent'
 # Tests the Test-Credential path where LogonUser fails if the user does not
 # have the right for a network logon
-- name: add new user that has the right SeDenyNetworkLogonRight
-  win_user:
-    name: '{{ test_win_user_name }}'
-    password: '{{ test_win_user_password2 }}'
-    state: present
-    groups:
-    - win_user-test
 
-- name: add new user that has the right SeDenyNetworkLogonRight (idempotent)
+- name: Add new user that has the right SeDenyNetworkLogonRight
   win_user:
-    name: '{{ test_win_user_name }}'
-    password: '{{ test_win_user_password2 }}'
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
     state: present
     groups:
-    - win_user-test
+      - win_user-test
+
+- name: Add new user that has the right SeDenyNetworkLogonRight (idempotent)
+  win_user:
+    name: "{{ test_win_user_name }}"
+    password: "{{ test_win_user_password2 }}"
+    state: present
+    groups:
+      - win_user-test
   register: deny_network_idempotent
 
-- name: assert add new user that has the right SeDenyNetworkLogonRight (idempotent)
-  assert:
+- name: Assert add new user that has the right SeDenyNetworkLogonRight (idempotent)
+  ansible.builtin.assert:
     that:
-    - not deny_network_idempotent is changed
+      - not deny_network_idempotent is changed

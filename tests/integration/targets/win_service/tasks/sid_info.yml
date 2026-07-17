@@ -1,45 +1,46 @@
-- name: set sid info (check)
+---
+- name: Set sid info (check)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     sid_info: restricted
   register: set_sid_info_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of set sid info (check)
+- name: Get result of set sid info (check)
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_sid_info_actual_check
 
-- name: assert set sid info (check)
-  assert:
+- name: Assert set sid info (check)
+  ansible.builtin.assert:
     that:
-    - set_sid_info_check is changed
-    - set_sid_info_actual_check.services[0].sid_info == 'none'
+      - set_sid_info_check is changed
+      - set_sid_info_actual_check.services[0].sid_info == 'none'
 
-- name: set sid info
+- name: Set sid info
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     sid_info: restricted
   register: set_type
 
-- name: get result of set sid info
+- name: Get result of set sid info
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_sid_info_actual
 
-- name: assert set sid info
-  assert:
+- name: Assert set sid info
+  ansible.builtin.assert:
     that:
-    - set_type is changed
-    - set_sid_info_actual.services[0].sid_info == 'restricted'
+      - set_type is changed
+      - set_sid_info_actual.services[0].sid_info == 'restricted'
 
-- name: set sid info (idempotent)
+- name: Set sid info (idempotent)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     sid_info: restricted
   register: set_sid_info_again
 
-- name: assert set sid info (idempotent)
-  assert:
+- name: Assert set sid info (idempotent)
+  ansible.builtin.assert:
     that:
-    - not set_sid_info_again is changed
+      - not set_sid_info_again is changed

@@ -1,67 +1,66 @@
 ---
-
-- name: add a simple host with address
+- name: Add a simple host with address
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
     canonical_name: "{{ test_win_hosts_cname }}"
   register: add_ip
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "add_ip.changed == true"
+      - add_ip.changed == true
 
-- name: get actual dns result
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns result
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
   register: add_ip_actual
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "add_ip_actual.stdout_lines[0]|lower == 'true'"
+      - add_ip_actual.stdout_lines[0]|lower == 'true'
 
-- name: add a simple host with ipv4 address (idempotent)
+- name: Add a simple host with ipv4 address (idempotent)
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
     canonical_name: "{{ test_win_hosts_cname }}"
   register: add_ip
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "add_ip.changed == false"
+      - add_ip.changed == false
 
-- name: remove simple host
+- name: Remove simple host
   win_hosts:
     state: absent
     ip_address: "{{ test_win_hosts_ip }}"
     canonical_name: "{{ test_win_hosts_cname }}"
   register: remove_ip
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "remove_ip.changed == true"
+      - remove_ip.changed == true
 
-- name: get actual dns result
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname}}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns result
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
+  failed_when: remove_ip_actual.rc == 0
   register: remove_ip_actual
-  failed_when: "remove_ip_actual.rc == 0"
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "remove_ip_actual.stdout_lines[0]|lower == 'false'"
+      - remove_ip_actual.stdout_lines[0]|lower == 'false'
 
-- name: remove simple host (idempotent)
+- name: Remove simple host (idempotent)
   win_hosts:
     state: absent
     ip_address: "{{ test_win_hosts_ip }}"
     canonical_name: "{{ test_win_hosts_cname }}"
   register: remove_ip
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "remove_ip.changed == false"
+      - remove_ip.changed == false
 
-- name: add host and set aliases
+- name: Add host and set aliases
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -70,29 +69,29 @@
     action: set
   register: set_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "set_aliases.changed == true"
+      - set_aliases.changed == true
 
-- name: get actual dns result for host
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns result for host
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ test_win_hosts_cname }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
   register: set_aliases_actual_host
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "set_aliases_actual_host.stdout_lines[0]|lower == 'true'"
+      - set_aliases_actual_host.stdout_lines[0]|lower == 'true'
 
-- name: get actual dns results for aliases
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns results for aliases
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
+  loop: "{{ test_win_hosts_aliases_set | union(test_win_hosts_aliases_remove) }}"
   register: set_aliases_actual
-  with_items: "{{ test_win_hosts_aliases_set | union(test_win_hosts_aliases_remove) }}"
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "item.stdout_lines[0]|lower == 'true'"
-  with_items: "{{ set_aliases_actual.results }}"
+      - item.stdout_lines[0]|lower == 'true'
+  loop: "{{ set_aliases_actual.results }}"
 
-- name: add host and set aliases (idempotent)
+- name: Add host and set aliases (idempotent)
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -101,11 +100,11 @@
     action: set
   register: set_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "set_aliases.changed == false"
+      - set_aliases.changed == false
 
-- name: remove aliases from the list
+- name: Remove aliases from the list
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -114,32 +113,32 @@
     action: remove
   register: remove_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "remove_aliases.changed == true"
+      - remove_aliases.changed == true
 
-- name: get actual dns result for removed aliases
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns result for removed aliases
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
+  failed_when: remove_aliases_removed_actual.rc == 0
+  loop: "{{ test_win_hosts_aliases_remove }}"
   register: remove_aliases_removed_actual
-  failed_when: "remove_aliases_removed_actual.rc == 0"
-  with_items: "{{ test_win_hosts_aliases_remove }}"
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "item.stdout_lines[0]|lower == 'false'"
-  with_items: "{{ remove_aliases_removed_actual.results }}"
+      - item.stdout_lines[0]|lower == 'false'
+  loop: "{{ remove_aliases_removed_actual.results }}"
 
-- name: get actual dns result for remaining aliases
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns result for remaining aliases
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
+  loop: "{{ test_win_hosts_aliases_set | difference(test_win_hosts_aliases_remove) }}"
   register: remove_aliases_remain_actual
-  with_items: "{{ test_win_hosts_aliases_set | difference(test_win_hosts_aliases_remove) }}"
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "item.stdout_lines[0]|lower == 'true'"
-  with_items: "{{ remove_aliases_remain_actual.results }}"
+      - item.stdout_lines[0]|lower == 'true'
+  loop: "{{ remove_aliases_remain_actual.results }}"
 
-- name: remove aliases from the list (idempotent)
+- name: Remove aliases from the list (idempotent)
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -148,11 +147,11 @@
     action: remove
   register: remove_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "remove_aliases.changed == false"
+      - remove_aliases.changed == false
 
-- name: add aliases back
+- name: Add aliases back
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -161,21 +160,21 @@
     action: add
   register: add_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "add_aliases.changed == true"
+      - add_aliases.changed == true
 
-- name: get actual dns results for aliases
-  ansible.windows.win_shell: "try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }"
+- name: Get actual dns results for aliases
+  ansible.windows.win_shell: try{ [array]$t = [Net.DNS]::GetHostEntry('{{ item }}') } catch { return 'false' } if ($t[0].HostName -eq '{{ test_win_hosts_cname }}' -and $t[0].AddressList[0].toString() -eq '{{ test_win_hosts_ip }}'){ return 'true' } else { return 'false' }
+  loop: "{{ test_win_hosts_aliases_set | union(test_win_hosts_aliases_remove) }}"
   register: add_aliases_actual
-  with_items: "{{ test_win_hosts_aliases_set | union(test_win_hosts_aliases_remove) }}"
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "item.stdout_lines[0]|lower == 'true'"
-  with_items: "{{ add_aliases_actual.results }}"
+      - item.stdout_lines[0]|lower == 'true'
+  loop: "{{ add_aliases_actual.results }}"
 
-- name: add aliases back (idempotent)
+- name: Add aliases back (idempotent)
   win_hosts:
     state: present
     ip_address: "{{ test_win_hosts_ip }}"
@@ -184,6 +183,6 @@
     action: add
   register: add_aliases
 
-- assert:
+- ansible.builtin.assert:
     that:
-      - "add_aliases.changed == false"
+      - add_aliases.changed == false
