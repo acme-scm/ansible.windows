@@ -1,40 +1,42 @@
-- name: remove local tmp
-  file:
-    path: '{{ local_tmp.path }}'
+---
+- name: Remove local tmp
+  ansible.builtin.file:
+    path: "{{ local_tmp.path }}"
     state: absent
+    mode: "0644"
   delegate_to: localhost
 
-- name: remove OpenAuthenticode module
-  shell: Uninstall-PSResource -Name OpenAuthenticode -Version 0.6.1
+- name: Remove OpenAuthenticode module
+  ansible.builtin.command:
+    cmd: Uninstall-PSResource -Name OpenAuthenticode -Version 0.6.1
+  changed_when: false
+  delegate_to: localhost
   args:
     executable: pwsh
-  delegate_to: localhost
 
-- name: remove WDAC certificates
+- name: Remove WDAC certificates
   win_powershell:
     parameters:
-      CAThumbprint: '{{ cert_info.output[0].ca_thumbprint }}'
-      CertThumbprint: '{{ cert_info.output[0].thumbprint }}'
+      CAThumbprint: "{{ cert_info.output[0].ca_thumbprint }}"
+      CertThumbprint: "{{ cert_info.output[0].thumbprint }}"
     script: |
       [CmdletBinding()]
       param (
           [Parameter(Mandatory)]
           [string]
           $CAThumbprint,
-
           [Parameter(Mandatory)]
           [string]
           $CertThumbprint
       )
-
       $ErrorActionPreference = 'Stop'
-
       Remove-Item -LiteralPath "Cert:\LocalMachine\Root\$CAThumbprint" -Force
       Remove-Item -LiteralPath "Cert:\LocalMachine\TrustedPublisher\$CertThumbprint" -Force
 
-- name: remove signed content
-  file:
-    path: '{{ item }}'
+- name: Remove signed content
+  ansible.builtin.file:
+    path: "{{ item }}"
     state: absent
+    mode: "0644"
+  loop: "{{ sign_result.stdout_lines }}"
   delegate_to: localhost
-  loop: '{{ sign_result.stdout_lines }}'

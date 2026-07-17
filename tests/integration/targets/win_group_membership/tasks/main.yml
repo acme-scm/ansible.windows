@@ -1,3 +1,4 @@
+---
 - name: Gather facts
   ansible.builtin.setup:
 
@@ -19,7 +20,7 @@
 - name: Add new test user
   ansible.windows.win_user:
     name: WinTestUser
-    password: "W1nGr0upM3mb3rsh1pT3$tP@$$w0rd"
+    password: W1nGr0upM3mb3rsh1pT3$tP@$$w0rd
     state: present
 
 - name: Run tests for win_group_membership
@@ -41,6 +42,5 @@
 
 - name: Remove test group
   ansible.windows.win_group: *wg_absent
-
 - name: Remove test user
   ansible.windows.win_group: *wu_absent

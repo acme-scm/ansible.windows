@@ -1,17 +1,15 @@
-- name: get current timezone
+---
+- name: Get current timezone
   win_command: tzutil.exe /g
-  register: original_timezone
   changed_when: false
-
+  register: original_timezone
 - block:
-  - name: Change starting timezone to GMT for test baseline
-    win_timezone:
-      timezone: GMT Standard Time
-
-  - name: run tests
-    import_tasks: tests.yml
-
+    - name: Change starting timezone to GMT for test baseline
+      win_timezone:
+        timezone: GMT Standard Time
+    - name: Run tests
+      ansible.builtin.import_tasks: tests.yml
   always:
-  - name: reset timezone back to defaults
-    win_timezone:
-      timezone: "{{ original_timezone.stdout | trim }}"
+    - name: Reset timezone back to defaults
+      win_timezone:
+        timezone: "{{ original_timezone.stdout | trim }}"

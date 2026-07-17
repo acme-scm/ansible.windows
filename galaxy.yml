@@ -1,5 +1,8 @@
+---
+name: Windows
 namespace: ansible
-name: windows
+tags:
+  - windows
 version: 3.6.1
 readme: README.md
 authors:
@@ -8,8 +11,6 @@ authors:
 description: |
   Ansible collection for core Windows plugins.
 license_file: COPYING
-tags:
-  - windows
 dependencies: {}
 repository: https://github.com/ansible-collections/ansible.windows
 documentation: https://docs.ansible.com/ansible/devel/collections/ansible/windows

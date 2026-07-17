@@ -1,16 +1,17 @@
-- name: run Process.cs tests
+---
+- name: Run Process.cs tests
   process_cs_tests:
   register: process_cs_actual
 
-- assert:
+- ansible.builtin.assert:
     that:
-    - process_cs_actual.data == 'success'
+      - process_cs_actual.data == 'success'
 
-- name: run Process.psm1 tests
+- name: Run Process.psm1 tests
   process_pwsh_tests:
-    print_argv: '{{ win_printargv_path }}'
+    print_argv: "{{ win_printargv_path }}"
   register: process_pwsh_actual
 
-- assert:
+- ansible.builtin.assert:
     that:
-    - process_pwsh_actual.data == 'success'
+      - process_pwsh_actual.data == 'success'

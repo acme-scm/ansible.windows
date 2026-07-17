@@ -1,11 +1,11 @@
 ---
 - name: Run Standard Tests
-  when: test_win_share
   module_defaults:
     win_share:
       name: "{{ test_win_share_name }}"
       path: "{{ test_win_share_path }}"
       state: present
+  when: test_win_share
   block:
     - name: Create Standard Test Folder
       ansible.windows.win_file:
@@ -19,7 +19,7 @@
 
     - name: Cleanup Standard Root Share
       win_share: &cleanup_std_root_share
-        name: "ROOT_TEST"
+        name: ROOT_TEST
         state: absent
 
     - name: Run Standard Tests
@@ -39,13 +39,13 @@
         state: absent
 
 - name: Run Cluster Tests
-  when: test_win_share_cluster
   module_defaults:
     win_share:
       name: "{{ test_win_share_cluster_name }}"
       path: "{{ test_win_share_cluster_path }}"
       scope_name: "{{ test_win_share_cluster_scope }}"
       state: present
+  when: test_win_share_cluster
   block:
     - name: Create Cluster Test Folder
       ansible.windows.win_file:

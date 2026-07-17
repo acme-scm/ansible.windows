@@ -1,45 +1,46 @@
-- name: set service type (check)
+---
+- name: Set service type (check)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     service_type: win32_share_process
   register: set_type_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of set service type (check)
+- name: Get result of set service type (check)
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_type_actual_check
 
-- name: assert set service type (check)
-  assert:
+- name: Assert set service type (check)
+  ansible.builtin.assert:
     that:
-    - set_type_check is changed
-    - set_type_actual_check.services[0].service_type == 'win32_own_process'
+      - set_type_check is changed
+      - set_type_actual_check.services[0].service_type == 'win32_own_process'
 
-- name: set service type
+- name: Set service type
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     service_type: win32_share_process
   register: set_type
 
-- name: get result of set service type
+- name: Get result of set service type
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_type_actual
 
-- name: assert set service type
-  assert:
+- name: Assert set service type
+  ansible.builtin.assert:
     that:
-    - set_type is changed
-    - set_type_actual.services[0].service_type == 'win32_share_process'
+      - set_type is changed
+      - set_type_actual.services[0].service_type == 'win32_share_process'
 
-- name: set service type (idempotent)
+- name: Set service type (idempotent)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     service_type: win32_share_process
   register: set_type_again
 
-- name: assert set service type (idempotent)
-  assert:
+- name: Assert set service type (idempotent)
+  ansible.builtin.assert:
     that:
-    - not set_type_again is changed
+      - not set_type_again is changed

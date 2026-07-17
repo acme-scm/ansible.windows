@@ -1,6 +1,6 @@
+---
 # Test code for win_optional_feature module
 # Copyright: (c) 2019, Carson Anderson <rcanderson23@gmail.com>
-
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -16,136 +16,136 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-- name: fail with invalid feature name
+- name: Fail with invalid feature name
   win_optional_feature:
     name:
-    - TelnetClient
-    - FakeFeature
+      - TelnetClient
+      - FakeFeature
     state: present
-  register: invalid_name
   failed_when: invalid_name.msg != "Failed to find feature 'FakeFeature'"
+  register: invalid_name
 
-- name: run with check_mode
+- name: Run with check_mode
   win_optional_feature:
     name: TelnetClient
     state: present
     include_parent: true
-  check_mode: yes
   register: feature_check
+  check_mode: true
 
-- name: assert check_mode
-  assert:
+- name: Assert check_mode
+  ansible.builtin.assert:
     that:
       - feature_check.changed
 
-- name: run without check_mode
+- name: Run without check_mode
   win_optional_feature:
     name: TelnetClient
     state: present
     include_parent: true
   register: real_feature_check
 
-- name: assert feature installed
-  assert:
+- name: Assert feature installed
+  ansible.builtin.assert:
     that:
       - real_feature_check.changed
 
-- name: test idempotence for install
+- name: Test idempotence for install
   win_optional_feature:
     name: TelnetClient
     state: present
     include_parent: true
   register: real_feature_check
 
-- name: assert idempotence
-  assert:
+- name: Assert idempotence
+  ansible.builtin.assert:
     that:
       - not real_feature_check.changed
 
-- name: install feature with list
+- name: Install feature with list
   win_optional_feature:
     name:
-    - SimpleTCP
-    - TelnetClient
+      - SimpleTCP
+      - TelnetClient
     state: present
     include_parent: true
   register: install_list
 
-- name: assert install feature with list
-  assert:
+- name: Assert install feature with list
+  ansible.builtin.assert:
     that:
-    - install_list is changed
+      - install_list is changed
 
-- name: install feature with list (idempotent)
+- name: Install feature with list (idempotent)
   win_optional_feature:
     name:
-    - SimpleTCP
-    - TelnetClient
+      - SimpleTCP
+      - TelnetClient
     state: present
     include_parent: true
   register: install_list_again
 
-- name: assert install feature with list (idempotent)
-  assert:
+- name: Assert install feature with list (idempotent)
+  ansible.builtin.assert:
     that:
-    - not install_list_again is changed
+      - not install_list_again is changed
 
-- name: removal run with check_mode
+- name: Removal run with check_mode
   win_optional_feature:
     name: TelnetClient
     state: absent
-  check_mode: yes
   register: feature_check
+  check_mode: true
 
-- name: assert removal check_mode
-  assert:
+- name: Assert removal check_mode
+  ansible.builtin.assert:
     that:
       - feature_check.changed
 
-- name: remove feature
+- name: Remove feature
   win_optional_feature:
     name: TelnetClient
     state: absent
   register: real_feature_check
 
-- name: assert feature removed
-  assert:
+- name: Assert feature removed
+  ansible.builtin.assert:
     that:
       - real_feature_check.changed
 
-- name: test idempotence for removal
+- name: Test idempotence for removal
   win_optional_feature:
     name: TelnetClient
     state: absent
   register: real_feature_check
 
-- name: assert idempotence
-  assert:
+- name: Assert idempotence
+  ansible.builtin.assert:
     that:
       - not real_feature_check.changed
 
-- name: remove feature with list
+- name: Remove feature with list
   win_optional_feature:
     name:
-    - SimpleTCP
-    - TelnetClient
+      - SimpleTCP
+      - TelnetClient
     state: absent
   register: remove_feature_list
 
-- name: assert remove feature with list
-  assert:
+- name: Assert remove feature with list
+  ansible.builtin.assert:
     that:
-    - remove_feature_list is changed
+      - remove_feature_list is changed
 
-- name: remove feature with list (idempotent)
+- name: Remove feature with list (idempotent)
   win_optional_feature:
     name:
-    - SimpleTCP
-    - TelnetClient
+      - SimpleTCP
+      - TelnetClient
     state: absent
   register: remove_feature_list_again
 
-- name: assert remove feature with list (idempotent)
-  assert:
+- name: Assert remove feature with list (idempotent)
+  ansible.builtin.assert:
     that:
-    - not remove_feature_list_again is changed
+      - not remove_feature_list_again is changed

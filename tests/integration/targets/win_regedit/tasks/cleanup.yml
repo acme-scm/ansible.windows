@@ -1,18 +1,18 @@
 ---
-- name: load HKLM:\ANSIBLE with test hive
+- name: Load HKLM:\ANSIBLE with test hive
   win_command: reg.exe load HKLM\ANSIBLE C:\Users\Default\NTUSER.dat
   failed_when: false
 
-- name: make sure testing keys are removed before test
+- name: Make sure testing keys are removed before test
   win_regedit:
-    path: '{{item}}'
-    delete_key: yes
+    path: "{{ item }}"
+    delete_key: true
     state: absent
-  with_items:
-  - '{{test_win_regedit_local_key}}'
-  - '{{test_win_regedit_classes_key}}'
-  - '{{test_win_regedit_hive_key}}'
+  loop:
+    - "{{ test_win_regedit_local_key }}"
+    - "{{ test_win_regedit_classes_key }}"
+    - "{{ test_win_regedit_hive_key }}"
 
-- name: ensure HKLM:\ANSIBLE is unloaded
+- name: Ensure HKLM:\ANSIBLE is unloaded
   win_command: reg.exe unload HKLM\ANSIBLE
   failed_when: false

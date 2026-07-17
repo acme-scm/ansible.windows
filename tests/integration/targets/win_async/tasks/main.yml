@@ -1,10 +1,11 @@
-- name: check that a job can deserialize large data
+---
+- name: Check that a job can deserialize large data
   win_shell: '"a" * 2097152'
-  async: 60
   register: async_large_output
   no_log: true
+  async: 60
 
-- name: assert output can deserialize large data
-  assert:
+- name: Assert output can deserialize large data
+  ansible.builtin.assert:
     that:
-    - async_large_output.stdout == ('a' * 2097152) + "\r\n"
+      - async_large_output.stdout == ('a' * 2097152) + "\r\n"

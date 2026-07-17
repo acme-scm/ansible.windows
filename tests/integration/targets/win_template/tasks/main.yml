@@ -1,6 +1,6 @@
+---
 # test code for the template module
 # (c) 2014, Michael DeHaan <michael.dehaan@gmail.com>
-
 # This file is part of Ansible
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -16,278 +16,276 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
-- name: set Unix and DOS expectations
-  set_fact:
+- name: Set Unix and DOS expectations
+  ansible.builtin.set_fact:
     expected_unix: "BEGIN\ntemplated_var_loaded\nEND\n"
     expected_dos: "BEGIN\r\ntemplated_var_loaded\r\nEND\r\n"
-
 # DOS TEMPLATE
-- name: fill in a basic template (DOS)
+
+- name: Fill in a basic template (DOS)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.dos.templated'
+    dest: "{{ remote_tmp_dir }}/foo.dos.templated"
   register: template_result
 
-- name: get result of fill in a basic template (DOS)
-  slurp:
-    path: '{{ remote_tmp_dir }}\foo.dos.templated'
+- name: Get result of fill in a basic template (DOS)
+  ansible.builtin.slurp:
+    path: "{{ remote_tmp_dir }}\\foo.dos.templated"
   register: template_dos_actual
 
-- name: verify that the file was marked as changed (DOS)
-  assert:
+- name: Verify that the file was marked as changed (DOS)
+  ansible.builtin.assert:
     that:
-      - 'template_result is changed'
-      - 'template_dos_actual.content|b64decode == expected_dos'
+      - template_result is changed
+      - template_dos_actual.content|b64decode == expected_dos
 
-- name: fill in a basic template again (DOS)
+- name: Fill in a basic template again (DOS)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.dos.templated'
+    dest: "{{ remote_tmp_dir }}/foo.dos.templated"
   register: template_result2
 
-- name: verify that the template was not changed (DOS)
-  assert:
+- name: Verify that the template was not changed (DOS)
+  ansible.builtin.assert:
     that:
-      - 'template_result2 is not changed'
-
+      - template_result2 is not changed
 # UNIX TEMPLATE
-- name: fill in a basic template (Unix)
+
+- name: Fill in a basic template (Unix)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
-    newline_sequence: '\n'
+    dest: "{{ remote_tmp_dir }}/foo.unix.templated"
+    newline_sequence: \n
   register: template_result
 
-- name: get result of fill in basic template (Unix)
-  slurp:
-    path: '{{ remote_tmp_dir }}\foo.unix.templated'
+- name: Get result of fill in basic template (Unix)
+  ansible.builtin.slurp:
+    path: "{{ remote_tmp_dir }}\\foo.unix.templated"
   register: template_unix_actual
 
-- name: verify that the file was marked as changed (Unix)
-  assert:
+- name: Verify that the file was marked as changed (Unix)
+  ansible.builtin.assert:
     that:
-      - 'template_result is changed'
-      - 'template_unix_actual.content|b64decode == expected_unix'
+      - template_result is changed
+      - template_unix_actual.content|b64decode == expected_unix
 
-- name: fill in a basic template again (Unix)
+- name: Fill in a basic template again (Unix)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
-    newline_sequence: '\n'
+    dest: "{{ remote_tmp_dir }}/foo.unix.templated"
+    newline_sequence: \n
   register: template_result2
 
-- name: verify that the template was not changed (Unix)
-  assert:
+- name: Verify that the template was not changed (Unix)
+  ansible.builtin.assert:
     that:
-      - 'template_result2 is not changed'
-
+      - template_result2 is not changed
 # TEST BACKUP
-- name: test backup (check_mode)
+
+- name: Test backup (check_mode)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
-    backup: yes
+    dest: "{{ remote_tmp_dir }}/foo.unix.templated"
+    backup: true
   register: cm_backup_result
-  check_mode: yes
+  check_mode: true
 
-- name: verify that a backup_file was returned
-  assert:
+- name: Verify that a backup_file was returned
+  ansible.builtin.assert:
     that:
       - cm_backup_result is changed
       - cm_backup_result.backup_file is not none
 
-- name: test backup (normal mode)
+- name: Test backup (normal mode)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}/foo.unix.templated'
-    backup: yes
+    dest: "{{ remote_tmp_dir }}/foo.unix.templated"
+    backup: true
   register: nm_backup_result
 
-- name: check backup_file
+- name: Check backup_file
   win_stat:
-    path: '{{ nm_backup_result.backup_file }}'
+    path: "{{ nm_backup_result.backup_file }}"
   register: backup_file
 
-- name: verify that a backup_file was returned
-  assert:
+- name: Verify that a backup_file was returned
+  ansible.builtin.assert:
     that:
-    - nm_backup_result is changed
-    - backup_file.stat.exists == true
+      - nm_backup_result is changed
+      - backup_file.stat.exists == true
 
-- name: create template dest directory
+- name: Create template dest directory
   win_file:
-    path: '{{ remote_tmp_dir }}\directory'
+    path: "{{ remote_tmp_dir }}\\directory"
     state: directory
 
-- name: template src file to directory with backslash (check mode)
+- name: Template src file to directory with backslash (check mode)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}\directory\'
-  check_mode: yes
+    dest: "{{ remote_tmp_dir }}\\directory\\"
   register: template_to_dir_backslash_check
+  check_mode: true
 
-- name: get result of template src file to directory with backslash (check_mode)
+- name: Get result of template src file to directory with backslash (check_mode)
   win_stat:
-    path: '{{ remote_tmp_dir }}\directory\foo.j2'
+    path: "{{ remote_tmp_dir }}\\directory\\foo.j2"
   register: template_to_dir_backslash_result_check
 
-- name: assert template src file to directory with backslash (check mode)
-  assert:
+- name: Assert template src file to directory with backslash (check mode)
+  ansible.builtin.assert:
     that:
-    - template_to_dir_backslash_check is changed
-    - not template_to_dir_backslash_result_check.stat.exists
+      - template_to_dir_backslash_check is changed
+      - not template_to_dir_backslash_result_check.stat.exists
 
-- name: template src file to directory with backslash
+- name: Template src file to directory with backslash
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}\directory\'
+    dest: "{{ remote_tmp_dir }}\\directory\\"
   register: template_to_dir_backslash
 
-- name: get result of template src file to directory with backslash
+- name: Get result of template src file to directory with backslash
   win_stat:
-    path: '{{ remote_tmp_dir }}\directory\foo.j2'
+    path: "{{ remote_tmp_dir }}\\directory\\foo.j2"
   register: template_to_dir_backslash_result
 
-- name: assert template src file to directory with backslash
-  assert:
+- name: Assert template src file to directory with backslash
+  ansible.builtin.assert:
     that:
-    - template_to_dir_backslash is changed
-    - template_to_dir_backslash_result.stat.exists
-    - template_to_dir_backslash_result.stat.checksum == 'ed4f166b2937875ecad39c06648551f5af0b56d3'
+      - template_to_dir_backslash is changed
+      - template_to_dir_backslash_result.stat.exists
+      - template_to_dir_backslash_result.stat.checksum == 'ed4f166b2937875ecad39c06648551f5af0b56d3'
 
-- name: template src file to directory with backslash (idempotent)
+- name: Template src file to directory with backslash (idempotent)
   win_template:
     src: foo.j2
-    dest: '{{ remote_tmp_dir }}\directory\'
+    dest: "{{ remote_tmp_dir }}\\directory\\"
   register: template_to_dir_backslash_again
 
-- name: assert template src file to directory with backslash (idempotent)
-  assert:
+- name: Assert template src file to directory with backslash (idempotent)
+  ansible.builtin.assert:
     that:
-    - not template_to_dir_backslash_again is changed
+      - not template_to_dir_backslash_again is changed
 
-- name: template src file to directory (check mode)
+- name: Template src file to directory (check mode)
   win_template:
     src: another_foo.j2
-    dest: '{{ remote_tmp_dir }}\directory'
-  check_mode: yes
+    dest: "{{ remote_tmp_dir }}\\directory"
   register: template_to_dir_check
+  check_mode: true
 
-- name: get result of template src file to directory (check_mode)
+- name: Get result of template src file to directory (check_mode)
   win_stat:
-    path: '{{ remote_tmp_dir }}\directory\another_foo.j2'
+    path: "{{ remote_tmp_dir }}\\directory\\another_foo.j2"
   register: template_to_dir_result_check
 
-- name: assert template src file to directory (check mode)
-  assert:
+- name: Assert template src file to directory (check mode)
+  ansible.builtin.assert:
     that:
-    - template_to_dir_check is changed
-    - not template_to_dir_result_check.stat.exists
+      - template_to_dir_check is changed
+      - not template_to_dir_result_check.stat.exists
 
-- name: template src file to directory
+- name: Template src file to directory
   win_template:
     src: another_foo.j2
-    dest: '{{ remote_tmp_dir }}\directory'
+    dest: "{{ remote_tmp_dir }}\\directory"
   register: template_to_dir
 
-- name: get result of template src file to directory
+- name: Get result of template src file to directory
   win_stat:
-    path: '{{ remote_tmp_dir }}\directory\another_foo.j2'
+    path: "{{ remote_tmp_dir }}\\directory\\another_foo.j2"
   register: template_to_dir_result
 
-- name: assert template src file to directory with
-  assert:
+- name: Assert template src file to directory with
+  ansible.builtin.assert:
     that:
-    - template_to_dir is changed
-    - template_to_dir_result.stat.exists
-    - template_to_dir_result.stat.checksum == 'b10b6f27290d554a77da2457b2ccd7d6de86b920'
+      - template_to_dir is changed
+      - template_to_dir_result.stat.exists
+      - template_to_dir_result.stat.checksum == 'b10b6f27290d554a77da2457b2ccd7d6de86b920'
 
-- name: template src file to directory (idempotent)
+- name: Template src file to directory (idempotent)
   win_template:
     src: another_foo.j2
-    dest: '{{ remote_tmp_dir }}\directory'
+    dest: "{{ remote_tmp_dir }}\\directory"
   register: template_to_dir_again
 
-- name: assert template src file to directory (idempotent)
-  assert:
+- name: Assert template src file to directory (idempotent)
+  ansible.builtin.assert:
     that:
-    - not template_to_dir_again is changed
+      - not template_to_dir_again is changed
 
-- name: template a file with utf-8 encoding
+- name: Template a file with utf-8 encoding
   win_template:
     src: foo.utf-8.j2
-    dest: '{{ remote_tmp_dir }}\foo.encoding.txt'
+    dest: "{{ remote_tmp_dir }}\\foo.encoding.txt"
   register: template_utf8
 
-- name: slurp utf-8 templated file
-  slurp:
-    path: '{{ remote_tmp_dir }}\foo.encoding.txt'
+- name: Slurp utf-8 templated file
+  ansible.builtin.slurp:
+    path: "{{ remote_tmp_dir }}\\foo.encoding.txt"
   register: template_utf8_actual
 
-- name: get expected templated contents
-  set_fact:
+- name: Get expected templated contents
+  ansible.builtin.set_fact:
     expected_content: '{{ lookup("template", "foo.utf-8.j2") | trim }}'
 
-- name: assert template a file with utf-8 encoding
-  assert:
+- name: Assert template a file with utf-8 encoding
+  ansible.builtin.assert:
     that:
-    - template_utf8 is changed
-    - template_utf8_actual.content | b64decode(encoding='utf-8') == expected_content + "\r\n"
+      - template_utf8 is changed
+      - template_utf8_actual.content | b64decode(encoding='utf-8') == expected_content + "\r\n"
 
-- name: template a file with windows-1252 encoding
+- name: Template a file with windows-1252 encoding
   win_template:
     src: foo.utf-8.j2
-    dest: '{{ remote_tmp_dir }}\foo.encoding.txt'
+    dest: "{{ remote_tmp_dir }}\\foo.encoding.txt"
     output_encoding: windows-1252
   register: template_windows_1252
 
-- name: slurp windows-1252 encoding
-  slurp:
-    path: '{{ remote_tmp_dir }}\foo.encoding.txt'
+- name: Slurp windows-1252 encoding
+  ansible.builtin.slurp:
+    path: "{{ remote_tmp_dir }}\\foo.encoding.txt"
   register: template_windows_1252_actual
 
-- name: assert template a file with windows-1252 encoding
-  assert:
+- name: Assert template a file with windows-1252 encoding
+  ansible.builtin.assert:
     that:
-    - template_windows_1252 is changed
-    - template_windows_1252_actual.content | b64decode(encoding='windows-1252') == expected_content + "\r\n"
+      - template_windows_1252 is changed
+      - template_windows_1252_actual.content | b64decode(encoding='windows-1252') == expected_content + "\r\n"
 
-- name: verify ansible_managed default
+- name: Verify ansible_managed default
   win_template:
     src: with_managed.j2
-    dest: '{{ remote_tmp_dir }}/with_managed_default.templated'
+    dest: "{{ remote_tmp_dir }}/with_managed_default.templated"
   register: template_result_managed_default
 
-- set_fact:
+- ansible.builtin.set_fact:
     expected_managed_default: "{{ lookup('template', 'with_managed.j2') }}"
 
-- name: run with overridden ansible_managed (no-op < 2.19)
+- name: Run with overridden ansible_managed (no-op < 2.19)
   vars:
     ansible_managed: overridden
   block:
-  - name: verify ansible_managed override
-    win_template:
-      src: with_managed.j2
-      dest: '{{ remote_tmp_dir }}/with_managed_override.templated'
-    register: template_result_managed_override
+    - name: Verify ansible_managed override
+      win_template:
+        src: with_managed.j2
+        dest: "{{ remote_tmp_dir }}/with_managed_override.templated"
+      register: template_result_managed_override
 
-  - set_fact:
-      expected_managed_override: "{{ lookup('template', 'with_managed.j2') }}"
+    - ansible.builtin.set_fact:
+        expected_managed_override: "{{ lookup('template', 'with_managed.j2') }}"
 
-- name: fetch templated ansible_managed values
-  slurp:
-    src: '{{ item }}'
+- name: Fetch templated ansible_managed values
+  ansible.builtin.slurp:
+    src: "{{ item }}"
   loop:
-    - '{{ template_result_managed_default.dest }}'
-    - '{{ template_result_managed_override.dest }}'
+    - "{{ template_result_managed_default.dest }}"
+    - "{{ template_result_managed_override.dest }}"
   register: slurp_res
-
-- set_fact:
-    actual_managed_default: '{{ slurp_res.results[0].content | b64decode }}'
-    actual_managed_override: '{{ slurp_res.results[1].content | b64decode }}'
-
-- name: assert expected ansible_managed values
-  assert:
+- ansible.builtin.set_fact:
+    actual_managed_default: "{{ slurp_res.results[0].content | b64decode }}"
+    actual_managed_override: "{{ slurp_res.results[1].content | b64decode }}"
+- name: Assert expected ansible_managed values
+  ansible.builtin.assert:
     that:
-    - actual_managed_default is contains expected_managed_default
-    - actual_managed_override is contains expected_managed_override
+      - actual_managed_default is contains expected_managed_default
+      - actual_managed_override is contains expected_managed_override
