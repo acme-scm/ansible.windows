@@ -1,6 +1,6 @@
+---
 # Copyright (c) 2022 Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 DOCUMENTATION:
   name: quote
   author:
@@ -33,17 +33,14 @@ DOCUMENTATION:
         - cmd
         - powershell
       default: None
-
 EXAMPLES: |
   - name: Escape an argument for win_command
     ansible.windows.win_command:
       cmd: my.exe {{ argument1 | ansible.windows.quote }}
-
   - name: Escape an argument for PowerShell
     ansible.windows.win_shell: |
       $var = {{ argument1 | ansible.windows.quote(shell='powershell') }}
       Write-Host $var
-
 RETURN:
   _value:
     description:

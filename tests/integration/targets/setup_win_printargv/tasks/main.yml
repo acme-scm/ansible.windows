@@ -1,9 +1,10 @@
-- name: copy PrintArgv.cs to remote host
+---
+- name: Copy PrintArgv.cs to remote host
   win_copy:
     src: PrintArgv.cs
-    dest: '{{ remote_tmp_dir }}\PrintArgv.cs'
+    dest: "{{ remote_tmp_dir }}\\PrintArgv.cs"
 
-- name: compile PrintArgv.cs
+- name: Compile PrintArgv.cs
   win_shell: |
     $ErrorActionPreference = 'Stop'
     $addParams = @{
@@ -14,6 +15,6 @@
     }
     Add-Type @addParams
 
-- name: set fact containing PrintArgv binary path
-  set_fact:
-    win_printargv_path: '{{ remote_tmp_dir }}\PrintArgv.exe'
+- name: Set fact containing PrintArgv binary path
+  ansible.builtin.set_fact:
+    win_printargv_path: "{{ remote_tmp_dir }}\\PrintArgv.exe"

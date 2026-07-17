@@ -22,7 +22,7 @@
 
 - name: Get stats on a certificate that does not exist
   ansible.windows.win_certificate_info:
-    thumbprint: "ABC"
+    thumbprint: ABC
   register: actual
 
 - name: Ensure non-existent certificate has exists set to false

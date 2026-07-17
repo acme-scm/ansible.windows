@@ -1,17 +1,16 @@
+---
 trigger:
   batch: true
   branches:
     include:
       - main
       - stable-*
-
 pr:
   autoCancel: true
   branches:
     include:
       - main
       - stable-*
-
 schedules:
   - cron: 0 9 * * *
     displayName: Nightly
@@ -20,7 +19,6 @@ schedules:
       include:
         - main
         - stable-*
-
 variables:
   - name: checkoutPath
     value: ansible_collections/ansible/windows
@@ -32,9 +30,7 @@ variables:
     value: 0
   - name: defaultContainer
     value: quay.io/ansible/azure-pipelines-test-container:7.0.0
-
 pool: Standard
-
 stages:
   - stage: Dependencies
     displayName: Dependencies
@@ -64,8 +60,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: 'devel/{0}'
+          nameFormat: "{0}"
+          testFormat: devel/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -78,8 +74,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.21/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.21/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -94,8 +90,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.20/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.20/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -108,8 +104,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.19/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.19/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -122,8 +118,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.18/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.18/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -136,8 +132,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.17/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.17/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -150,8 +146,8 @@ stages:
     jobs:
       - template: templates/matrix.yml
         parameters:
-          nameFormat: '{0}'
-          testFormat: '2.16/{0}'
+          nameFormat: "{0}"
+          testFormat: 2.16/{0}
           targets:
             - name: Sanity
               test: sanity
@@ -320,7 +316,6 @@ stages:
           testFormat: devel/powershell/{0}/1
           targets:
             - name: 7.6
-
   - stage: Summary
     condition: succeededOrFailed()
     dependsOn:

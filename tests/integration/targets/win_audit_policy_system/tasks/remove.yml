@@ -1,96 +1,96 @@
+---
 #########################
 ### check mode remove ###
 #########################
-- name: check mode disable category
+
+- name: Check mode disable category
   win_audit_policy_system:
     category: "{{ category_name }}"
     audit_type: none
-  check_mode: yes
   register: category
+  check_mode: true
 
-- name: check mode disable subcategory
+- name: Check mode disable subcategory
   win_audit_policy_system:
     subcategory: "{{ subcategory_name }}"
     audit_type: none
-  check_mode: yes
   register: subcategory
+  check_mode: true
 
-- name: check mode assert that changed is true
-  assert:
+- name: Check mode assert that changed is true
+  ansible.builtin.assert:
     that:
       - category is changed
       - subcategory is changed
 
-- name: check mode assert that audit_type is still "failure" (old value) for category
-  assert:
+- name: Check mode assert that audit_type is still "failure" (old value) for category
+  ansible.builtin.assert:
     that:
       - item == "failure"
-  loop: '{{ items | flatten(levels=1) }}'
+  loop: "{{ items | flatten(levels=1) }}"
   vars:
     items:
-    - "{{ category.current_audit_policy.values() | list }}"
-    - "{{ subcategory.current_audit_policy.values() | list }}"
-
+      - "{{ category.current_audit_policy.values() | list }}"
+      - "{{ subcategory.current_audit_policy.values() | list }}"
 ######################
 ### disable policy ###
 ######################
 
-- name: disable category
+- name: Disable category
   win_audit_policy_system:
     category: "{{ category_name }}"
     audit_type: none
   register: category
 
-- name: disable subcategory
+- name: Disable subcategory
   win_audit_policy_system:
     subcategory: "{{ subcategory_name }}"
     audit_type: none
   register: subcategory
 
-- name: assert that changed is true
-  assert:
+- name: Assert that changed is true
+  ansible.builtin.assert:
     that:
       - category is changed
       - subcategory is changed
 
-- name: assert that audit_type is "no auditing"
-  assert:
+- name: Assert that audit_type is "no auditing"
+  ansible.builtin.assert:
     that:
       - item == "no auditing"
-  loop: '{{ items | flatten(levels=1) }}'
+  loop: "{{ items | flatten(levels=1) }}"
   vars:
     items:
-    - "{{ subcategory.current_audit_policy.values() | list }}"
-    - "{{ category.current_audit_policy.values() | list }}"
-
+      - "{{ subcategory.current_audit_policy.values() | list }}"
+      - "{{ category.current_audit_policy.values() | list }}"
 ##########################
 ### idempotent disable ###
 ##########################
 
-- name: idem disable category
+- name: Idem disable category
   win_audit_policy_system:
     category: "{{ category_name }}"
     audit_type: none
   register: category
 
-- name: idem disable subcategory
+- name: Idem disable subcategory
   win_audit_policy_system:
     subcategory: "{{ subcategory_name }}"
     audit_type: none
   register: subcategory
 
-- name: idem assert that changed is false
-  assert:
+- name: Idem assert that changed is false
+  ansible.builtin.assert:
     that:
       - category is not changed
       - subcategory is not changed
 
-- name: assert that audit_type is "no auditing"
-  assert:
+- name: Assert that audit_type is "no auditing"
+  ansible.builtin.assert:
     that:
       - item == "no auditing"
-  loop: '{{ items | flatten(levels=1) }}'
+  loop: "{{ items | flatten(levels=1) }}"
   vars:
     items:
-    - "{{ subcategory.current_audit_policy.values() | list }}"
-    - "{{ category.current_audit_policy.values() | list }}"
+      - "{{ subcategory.current_audit_policy.values() | list }}"
+      - "{{ category.current_audit_policy.values() | list }}"

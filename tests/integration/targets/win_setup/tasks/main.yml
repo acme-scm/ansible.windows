@@ -1,6 +1,6 @@
+---
 # test code for the setup module when using winrm connection
 # (c) 2014, Chris Church <chris@ninemoreminutes.com>
-
 # This file is part of Ansible
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -15,26 +15,25 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-
 # We don't want to validate all facts and how they are gathered, we just use
 # this to verify some values that use a more complex gathering process are
 # set to what is expected.
-- name: get some pre-existing facts for validation
+
+- name: Get some pre-existing facts for validation
   ansible.windows.win_powershell:
     script: |
       $os = Get-CimInstance -Class Win32_OperatingSystem
-
       @{
           distribution = $os.Caption
       }
   register: pre_setup_facts
 
-- name: test setup module
+- name: Test setup module
   action: setup
   register: setup_result
 
-- name: check windows setup result
-  assert:
+- name: Check windows setup result
+  ansible.builtin.assert:
     that:
       - setup_result is not failed
       - setup_result is not changed
@@ -67,128 +66,128 @@
       - setup_result.ansible_facts.gather_subset[0] == 'all'
       - setup_result.ansible_facts.module_setup == true
 
-- name: check setup result only when using https
-  assert:
+- name: Check setup result only when using https
+  ansible.builtin.assert:
     that:
       - setup_result.ansible_facts.ansible_win_rm_certificate_expires is defined
       - setup_result.ansible_facts.ansible_win_rm_certificate_thumbprint is defined
-  when: ansible_ssh_port|default(5986) != 5985
+  when: ansible_ssh_port | default(5986) != 5985
 
-- name: test gather_subset "!all"
-  setup:
-    gather_subset: '!all'
+- name: Test gather_subset "!all"
+  ansible.builtin.setup:
+    gather_subset: "!all"
   register: setup_result
 
-- name: verify that some known "all" keys are missing (should just be "min" subset)
-  assert:
+- name: Verify that some known "all" keys are missing (should just be "min" subset)
+  ansible.builtin.assert:
     that:
-    - setup_result is not failed
-    - setup_result is not changed
-    - setup_result.ansible_facts is defined
-    - setup_result.ansible_facts.gather_subset[0] == '!all'
-    - setup_result.ansible_facts.gather_subset is defined
-    - setup_result.ansible_facts.ansible_ip_addresses is not defined
-    - setup_result.ansible_facts.ansible_interfaces is not defined
+      - setup_result is not failed
+      - setup_result is not changed
+      - setup_result.ansible_facts is defined
+      - setup_result.ansible_facts.gather_subset[0] == '!all'
+      - setup_result.ansible_facts.gather_subset is defined
+      - setup_result.ansible_facts.ansible_ip_addresses is not defined
+      - setup_result.ansible_facts.ansible_interfaces is not defined
 
-- name: test gather_subset "!all,!min" with list
-  setup:
+- name: Test gather_subset "!all,!min" with list
+  ansible.builtin.setup:
     gather_subset:
-    - '!all'
-    - '!min'
+      - "!all"
+      - "!min"
   register: setup_result
 
-- name: verify that only status keys are returned
-  assert:
+- name: Verify that only status keys are returned
+  ansible.builtin.assert:
     that:
-    - setup_result is not failed
-    - setup_result is not changed
-    - setup_result.ansible_facts is defined
-    - setup_result.ansible_facts.gather_subset is defined
-    - setup_result.ansible_facts.gather_subset[0] == '!all'
-    - setup_result.ansible_facts.gather_subset[1] == '!min'
-    - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
+      - setup_result is not failed
+      - setup_result is not changed
+      - setup_result.ansible_facts is defined
+      - setup_result.ansible_facts.gather_subset is defined
+      - setup_result.ansible_facts.gather_subset[0] == '!all'
+      - setup_result.ansible_facts.gather_subset[1] == '!min'
+      - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
 
-- name: test gather_subset "!all,!min,interfaces" with list
-  setup:
+- name: Test gather_subset "!all,!min,interfaces" with list
+  ansible.builtin.setup:
     gather_subset:
-    - '!all'
-    - '!min'
-    - interfaces
+      - "!all"
+      - "!min"
+      - interfaces
   register: setup_result
 
-- name: verify that only status keys and ansible_interfaces are returned
-  assert:
+- name: Verify that only status keys and ansible_interfaces are returned
+  ansible.builtin.assert:
     that:
-    - setup_result is not failed
-    - setup_result is not changed
-    - setup_result.ansible_facts is defined
-    - setup_result.ansible_facts.gather_subset is defined
-    - setup_result.ansible_facts.gather_subset[0] == '!all'
-    - setup_result.ansible_facts.gather_subset[1] == '!min'
-    - setup_result.ansible_facts.gather_subset[2] == 'interfaces'
-    - setup_result.ansible_facts.ansible_interfaces is defined
-    - setup_result.ansible_facts.ansible_interfaces[0] is defined
-    - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
-    - setup_result.ansible_facts.ansible_interfaces[0].connection_name is defined
-    - setup_result.ansible_facts.ansible_interfaces[0].interface_index is defined
-    - setup_result.ansible_facts.keys() | list | union(['ansible_interfaces','gather_subset','module_setup']) | length == 3
+      - setup_result is not failed
+      - setup_result is not changed
+      - setup_result.ansible_facts is defined
+      - setup_result.ansible_facts.gather_subset is defined
+      - setup_result.ansible_facts.gather_subset[0] == '!all'
+      - setup_result.ansible_facts.gather_subset[1] == '!min'
+      - setup_result.ansible_facts.gather_subset[2] == 'interfaces'
+      - setup_result.ansible_facts.ansible_interfaces is defined
+      - setup_result.ansible_facts.ansible_interfaces[0] is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].interface_name is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].connection_name is defined
+      - setup_result.ansible_facts.ansible_interfaces[0].interface_index is defined
+      - setup_result.ansible_facts.keys() | list | union(['ansible_interfaces','gather_subset','module_setup']) | length == 3
 
-- name: test gather_subset "!all,!min,bogus" with list
-  setup:
+- name: Test gather_subset "!all,!min,bogus" with list
+  ansible.builtin.setup:
     gather_subset:
-    - '!all'
-    - '!min'
-    - bogus
+      - "!all"
+      - "!min"
+      - bogus
   register: setup_result
 
-- name: verify that only status keys are returned and that we got a warning
-  assert:
+- name: Verify that only status keys are returned and that we got a warning
+  ansible.builtin.assert:
     that:
-    - setup_result is not failed
-    - setup_result is not changed
-    - setup_result.ansible_facts is defined
-    - setup_result.ansible_facts.gather_subset is defined
-    - setup_result.ansible_facts.gather_subset[0] == '!all'
-    - setup_result.ansible_facts.gather_subset[1] == '!min'
-    - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
-    - setup_result.warnings | length == 1
-    - setup_result.warnings[0] | regex_search('bogus') is truthy
+      - setup_result is not failed
+      - setup_result is not changed
+      - setup_result.ansible_facts is defined
+      - setup_result.ansible_facts.gather_subset is defined
+      - setup_result.ansible_facts.gather_subset[0] == '!all'
+      - setup_result.ansible_facts.gather_subset[1] == '!min'
+      - setup_result.ansible_facts.keys() | list | union(['gather_subset','module_setup']) | length == 2
+      - setup_result.warnings | length == 1
+      - setup_result.warnings[0] | regex_search('bogus') is truthy
 
-- name: create fact directory
+- name: Create fact directory
   win_file:
-    path: '{{ remote_tmp_dir }}\facts'
+    path: "{{ remote_tmp_dir }}\\facts"
     state: directory
 
-- name: copy some fact files to that directory
+- name: Copy some fact files to that directory
   win_copy:
     src: files/
-    dest: '{{ remote_tmp_dir }}\facts'
+    dest: "{{ remote_tmp_dir }}\\facts"
 
-- name: gather custom facts
-  setup:
-    fact_path: '{{ remote_tmp_dir }}\facts'
+- name: Gather custom facts
+  ansible.builtin.setup:
+    fact_path: "{{ remote_tmp_dir }}\\facts"
   register: setup_result
 
-- name: assert gather custom facts
-  assert:
+- name: Assert gather custom facts
+  ansible.builtin.assert:
     that:
-    - setup_result.ansible_facts.ansible_my_facts.my_complex_custom_fact == {'hello':'world'}
-    - setup_result.ansible_facts.ansible_my_facts.my_custom_fact == 'value'
-    - setup_result.ansible_facts.ansible_other_facts == ['abc', 'def']
-    - setup_result.ansible_facts.ansible_json_facts.my_json_complex_custom_fact == {'hello':'world'}
-    - setup_result.ansible_facts.ansible_json_facts.my_json_custom_fact == 'value'
-    - setup_result.ansible_facts.ansible_true_fact
-    - not setup_result.ansible_facts.ansible_false_fact
-
+      - setup_result.ansible_facts.ansible_my_facts.my_complex_custom_fact == {'hello':'world'}
+      - setup_result.ansible_facts.ansible_my_facts.my_custom_fact == 'value'
+      - setup_result.ansible_facts.ansible_other_facts == ['abc', 'def']
+      - setup_result.ansible_facts.ansible_json_facts.my_json_complex_custom_fact == {'hello':'world'}
+      - setup_result.ansible_facts.ansible_json_facts.my_json_custom_fact == 'value'
+      - setup_result.ansible_facts.ansible_true_fact
+      - not setup_result.ansible_facts.ansible_false_fact
 # https://github.com/ansible-collections/ansible.windows/pull/78#issuecomment-745229594
-- name: check for facter with custom PATH
-  setup:
+
+- name: Check for facter with custom PATH
+  ansible.builtin.setup:
     gather_subset: facter
   register: faulty_path
   environment:
-    PATH: '{{ ansible_env.Path }};;C:\Test'
+    PATH: "{{ ansible_env.Path }};;C:\\Test"
 
-- name: make sure there were no warnings
-  assert:
+- name: Make sure there were no warnings
+  ansible.builtin.assert:
     that:
-    - fault_path.warnings | default([]) | length == 0
+      - fault_path.warnings | default([]) | length == 0

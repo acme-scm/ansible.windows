@@ -1,6 +1,6 @@
+---
 # Copyright: (c) 2026, Ansible Project
 # GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
-
 DOCUMENTATION:
   module: win_capability_info
   short_description: Get information about Windows capabilities
@@ -24,20 +24,17 @@ DOCUMENTATION:
         - V(1) logs errors and warnings
         - V(2) logs errors, warnings, and information
         - V(3) logs all of the previous plus debug output.
-        - This log is managed by DISM itself, the values allowed may change
-          with different versions of Windows.
+        - This log is managed by DISM itself, the values allowed may change with different versions of Windows.
       type: int
     log_path:
       description:
         - Specifies the full path and file name to log to.
-        - If not specified the logging uses the default DISM log file location
-          which is V(%WINDIR%\\Logs\\Dism\\dism.log).
+        - If not specified the logging uses the default DISM log file location which is V(%WINDIR%\\Logs\\Dism\\dism.log).
       type: path
     name:
       description:
         - A list of capability names to filter by.
-        - Supports wildcard patterns like V(?) for single character matching
-          and V(*) for multiple character matching.
+        - Supports wildcard patterns like V(?) for single character matching and V(*) for multiple character matching.
         - If not specified, all capabilities will be returned.
       type: list
       elements: str
@@ -62,24 +59,20 @@ DOCUMENTATION:
     - module: ansible.windows.win_capability
   author:
     - Jordan Borean (@jborean93)
-
 EXAMPLES: |
   - name: Get all capabilities
     ansible.windows.win_capability_info:
     register: capability_info
-
   - name: Get specific capability using full name
     ansible.windows.win_capability_info:
       name: OpenSSH.Client~~~~0.0.1.0
     register: ssh_client_info
-
   - name: Get capabilities matching a pattern
     ansible.windows.win_capability_info:
       name:
         - OpenSSH.*
         - Language.Basic*
     register: filtered_capabilities
-
 RETURN:
   capabilities:
     description:
@@ -116,8 +109,7 @@ RETURN:
       state:
         description:
           - The installation state of the capability.
-          - Known values are V(NotPresent), V(UninstallPending), V(Staged),
-            V(Resolved), V(Installed), V(InstallPending), V(Superseded), and
+          - Known values are V(NotPresent), V(UninstallPending), V(Staged), V(Resolved), V(Installed), V(InstallPending), V(Superseded), and 
             V(PartiallyInstalled).
         returned: always
         type: str

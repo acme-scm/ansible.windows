@@ -1,193 +1,191 @@
-- name: set owner for invalid path
+---
+- name: Set owner for invalid path
   win_owner:
     path: C:\invalid
     user: SYSTEM
-  register: invalid_path
   failed_when: invalid_path.msg != 'C:\invalid file or directory does not exist on the host'
+  register: invalid_path
 
-- name: set owner for invalid user
+- name: Set owner for invalid user
   win_owner:
-    path: "{{test_win_owner_path}}"
+    path: "{{ test_win_owner_path }}"
     user: invalid-user
-  register: invalid_user
   failed_when: invalid_user.msg is not search("Failed to translate 'invalid-user' to a SecurityIdentifier:.*")
+  register: invalid_user
 
-- name: set owner defaults check
+- name: Set owner defaults check
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
   register: defaults_check
-  check_mode: True
+  check_mode: true
 
-- name: get owner of folder of set owner defaults check
-  win_shell: (Get-Acl -LiteralPath '{{test_win_owner_path}}\\folder').Owner
+- name: Get owner of folder of set owner defaults check
+  win_shell: (Get-Acl -LiteralPath '{{ test_win_owner_path }}\\folder').Owner
   register: actual_defaults_check
 
-- name: assert set owner defaults check
-  assert:
+- name: Assert set owner defaults check
+  ansible.builtin.assert:
     that:
-    - defaults_check is changed
-    - actual_defaults_check.stdout_lines[0] == 'BUILTIN\Administrators'
+      - defaults_check is changed
+      - actual_defaults_check.stdout_lines[0] == 'BUILTIN\Administrators'
 
-- name: set owner defaults
+- name: Set owner defaults
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
   register: defaults
 
-- name: get owner of folder of set owner defaults
-  win_shell: (Get-Acl -LiteralPath '{{test_win_owner_path}}\\folder').Owner
+- name: Get owner of folder of set owner defaults
+  win_shell: (Get-Acl -LiteralPath '{{ test_win_owner_path }}\\folder').Owner
   register: actual_defaults
 
-- name: assert set owner defaults
-  assert:
+- name: Assert set owner defaults
+  ansible.builtin.assert:
     that:
-    - defaults is changed
-    - actual_defaults.stdout_lines[0] == 'NT AUTHORITY\SYSTEM'
+      - defaults is changed
+      - actual_defaults.stdout_lines[0] == 'NT AUTHORITY\SYSTEM'
 
-- name: set owner defaults again
+- name: Set owner defaults again
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
   register: defaults_again
 
-- name: assert set owner defaults again
-  assert:
+- name: Assert set owner defaults again
+  ansible.builtin.assert:
     that:
-    - defaults_again is not changed
+      - defaults_again is not changed
 
-- name: set owner recurse check
+- name: Set owner recurse check
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
-    recurse: True
+    recurse: true
   register: recurse_check
-  check_mode: True
+  check_mode: true
 
-- name: get owner of folder of set owner recurse check
-  win_shell: (Get-Acl -LiteralPath '{{test_win_owner_path}}\\{{item.path}}').Owner
-  register: actual_recurse_check
+- name: Get owner of folder of set owner recurse check
+  win_shell: (Get-Acl -LiteralPath '{{ test_win_owner_path }}\\{{ item.path }}').Owner
   failed_when: actual_recurse_check.stdout_lines[0] != item.owner
-  with_items:
-  - { path: 'folder', owner: 'NT AUTHORITY\SYSTEM' }
-  - { path: 'folder\file.txt', owner: 'BUILTIN\Administrators' }
-  - { path: 'folder\folder1', owner: 'BUILTIN\Administrators' }
-  - { path: 'folder\folder1\file.txt', owner: 'BUILTIN\Administrators' }
-  - { path: 'folder\folder2', owner: 'BUILTIN\Administrators' }
-  - { path: 'folder\folder2\file.txt', owner: 'BUILTIN\Administrators' }
+  loop:
+    - { path: folder, owner: NT AUTHORITY\SYSTEM }
+    - { path: folder\file.txt, owner: BUILTIN\Administrators }
+    - { path: folder\folder1, owner: BUILTIN\Administrators }
+    - { path: folder\folder1\file.txt, owner: BUILTIN\Administrators }
+    - { path: folder\folder2, owner: BUILTIN\Administrators }
+    - { path: folder\folder2\file.txt, owner: BUILTIN\Administrators }
+  register: actual_recurse_check
 
-- name: assert set owner recurse check
-  assert:
+- name: Assert set owner recurse check
+  ansible.builtin.assert:
     that:
-    - recurse_check is changed
+      - recurse_check is changed
 
-- name: set owner recurse
+- name: Set owner recurse
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
-    recurse: True
+    recurse: true
   register: recurse
 
-- name: get owner of folder of set owner recurse
-  win_shell: (Get-Acl -LiteralPath '{{test_win_owner_path}}\\{{item}}').Owner
-  register: actual_recurse
+- name: Get owner of folder of set owner recurse
+  win_shell: (Get-Acl -LiteralPath '{{ test_win_owner_path }}\\{{ item }}').Owner
   failed_when: actual_recurse.stdout_lines[0] != 'NT AUTHORITY\SYSTEM'
-  with_items:
-  - folder
-  - folder\file.txt
-  - folder\folder1
-  - folder\folder1\file.txt
-  - folder\folder2
-  - folder\folder2\file.txt
+  loop:
+    - folder
+    - folder\file.txt
+    - folder\folder1
+    - folder\folder1\file.txt
+    - folder\folder2
+    - folder\folder2\file.txt
+  register: actual_recurse
 
-- name: assert set owner recurse
-  assert:
+- name: Assert set owner recurse
+  ansible.builtin.assert:
     that:
-    - recurse is changed
+      - recurse is changed
 
-- name: set owner recurse again
+- name: Set owner recurse again
   win_owner:
-    path: "{{test_win_owner_path}}\\folder"
+    path: "{{ test_win_owner_path }}\\folder"
     user: SYSTEM
-    recurse: True
+    recurse: true
   register: recurse_again
 
-- name: assert set owner recurse again
-  assert:
+- name: Assert set owner recurse again
+  ansible.builtin.assert:
     that:
-    - recurse_again is not changed
+      - recurse_again is not changed
 
-- name: create test user
+- name: Create test user
   win_user:
-    name: '{{ test_win_owner_user }}'
+    name: "{{ test_win_owner_user }}"
     password: E1K0-O8b1-c8M9-c6D5
   register: test_user
 
-- name: set owner with space recurse
+- name: Set owner with space recurse
   win_owner:
-    path: "{{test_win_owner_path}}\\folder with space"
-    user: '{{ test_win_owner_user }}'
-    recurse: True
+    path: "{{ test_win_owner_path }}\\folder with space"
+    user: "{{ test_win_owner_user }}"
+    recurse: true
   register: recurse_space
 
-- name: get owner of folder of set owner with space recurse
+- name: Get owner of folder of set owner with space recurse
   win_shell: |
     $owner = (Get-Acl -LiteralPath '{{ test_win_owner_path }}\{{ item }}').Owner
     $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $owner
     $account.Translate([System.Security.Principal.SecurityIdentifier]).Value
-  register: actual_recurse_space
   failed_when: actual_recurse_space.stdout_lines[0] != test_user.sid
-  with_items:
-  - folder with space
-  - folder with space\file.txt
-  - folder with space\folder1
-  - folder with space\folder1\file.txt
-  - folder with space\folder2
-  - folder with space\folder2\file.txt
+  loop:
+    - folder with space
+    - folder with space\file.txt
+    - folder with space\folder1
+    - folder with space\folder1\file.txt
+    - folder with space\folder2
+    - folder with space\folder2\file.txt
+  register: actual_recurse_space
 
-- name: assert set owner with space recurse
-  assert:
+- name: Assert set owner with space recurse
+  ansible.builtin.assert:
     that:
-    - recurse_space is changed
+      - recurse_space is changed
 
-- name: set owner with space recurse again
+- name: Set owner with space recurse again
   win_owner:
-    path: "{{test_win_owner_path}}\\folder with space"
-    user: '{{ test_win_owner_user }}'
-    recurse: True
+    path: "{{ test_win_owner_path }}\\folder with space"
+    user: "{{ test_win_owner_user }}"
+    recurse: true
   register: recurse_space_again
 
-- name: assert set owner with space recurse again
-  assert:
+- name: Assert set owner with space recurse again
+  ansible.builtin.assert:
     that:
-    - recurse_space_again is not changed
+      - recurse_space_again is not changed
 
-- name: set owner recursively on limited access dir
+- name: Set owner recursively on limited access dir
   win_owner:
-    path: '{{ test_win_owner_path }}\secure'
-    user: '{{ test_win_owner_user }}'
-    recurse: True
+    path: "{{ test_win_owner_path }}\\secure"
+    user: "{{ test_win_owner_user }}"
+    recurse: true
   register: recurse_secure
   # Become is important for this test as privileges won't be enabled by default
   # This checks that the module explicitly enables them if needed.
-  become: True
+  become: true
   become_method: runas
   vars:
-    ansible_become_user: '{{ ansible_user }}'
-    ansible_become_password: '{{ ansible_password | default(ansible_test_connection_password) }}'
+    ansible_become_user: "{{ ansible_user }}"
+    ansible_become_password: "{{ ansible_password | default(ansible_test_connection_password) }}"
 
-- name: get result of set owner recursively on limited access dir
+- name: Get result of set owner recursively on limited access dir
   win_powershell:
     error_action: stop
     parameters:
-      Path: '{{ test_win_owner_path }}'
+      Path: "{{ test_win_owner_path }}"
     script: |
       param($Path)
-
       Import-Module -Name Microsoft.PowerShell.Security
-
       $Ansible.Changed = $false
-
       "secure", "secure\folder 1", "secure\folder 1\folder 2" | ForEach-Object {
           $acl = Get-Acl -LiteralPath (Join-Path $Path $_)
           $account = New-Object -TypeName System.Security.Principal.NTAccount -ArgumentList $acl.Owner
@@ -195,11 +193,11 @@
       }
   register: recurse_secure_actual
 
-- name: assert set owner recursively on limited access dir
-  assert:
+- name: Assert set owner recursively on limited access dir
+  ansible.builtin.assert:
     that:
-    - recurse_secure is changed
-    - recurse_secure_actual.output | count == 3
-    - recurse_secure_actual.output[0] == test_user.sid
-    - recurse_secure_actual.output[1] == test_user.sid
-    - recurse_secure_actual.output[2] == test_user.sid
+      - recurse_secure is changed
+      - recurse_secure_actual.output | count == 3
+      - recurse_secure_actual.output[0] == test_user.sid
+      - recurse_secure_actual.output[1] == test_user.sid
+      - recurse_secure_actual.output[2] == test_user.sid

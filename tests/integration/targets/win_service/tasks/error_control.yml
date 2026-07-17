@@ -1,45 +1,46 @@
-- name: set error control (check)
+---
+- name: Set error control (check)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     error_control: ignore
   register: set_error_control_check
-  check_mode: yes
+  check_mode: true
 
-- name: get result of set error control (check)
+- name: Get result of set error control (check)
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_error_control_actual_check
 
-- name: assert set error control (check)
-  assert:
+- name: Assert set error control (check)
+  ansible.builtin.assert:
     that:
-    - set_error_control_check is changed
-    - set_error_control_actual_check.services[0].error_control == 'normal'
+      - set_error_control_check is changed
+      - set_error_control_actual_check.services[0].error_control == 'normal'
 
-- name: set error control
+- name: Set error control
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     error_control: ignore
   register: set_type
 
-- name: get result of set error control
+- name: Get result of set error control
   win_service_info:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
   register: set_error_control_actual
 
-- name: assert set error control
-  assert:
+- name: Assert set error control
+  ansible.builtin.assert:
     that:
-    - set_type is changed
-    - set_error_control_actual.services[0].error_control == 'ignore'
+      - set_type is changed
+      - set_error_control_actual.services[0].error_control == 'ignore'
 
-- name: set error control (idempotent)
+- name: Set error control (idempotent)
   win_service:
-    name: '{{ test_win_service_name }}'
+    name: "{{ test_win_service_name }}"
     error_control: ignore
   register: set_error_control_again
 
-- name: assert set error control (idempotent)
-  assert:
+- name: Assert set error control (idempotent)
+  ansible.builtin.assert:
     that:
-    - not set_error_control_again is changed
+      - not set_error_control_again is changed

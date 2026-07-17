@@ -1,7 +1,6 @@
 ---
 # test code for the win_psmodule module when using winrm connection
 # (c) 2017, Daniele Lazzari <lazzari@mailup.com>
-
 # This file is part of Ansible
 #
 # Ansible is free software: you can redistribute it and/or modify
@@ -16,14 +15,12 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
-
 - block:
-  - name: run all tasks
-    include_tasks: tests.yml
-
+    - name: Run all tasks
+      include_tasks: tests.yml
   always:
-  - name: remove test routes
-    win_route:
-      destination: "{{ destination_ip_address }}/32"
-      state: absent
-    register: route_removed
+    - name: Remove test routes
+      win_route:
+        destination: "{{ destination_ip_address }}/32"
+        state: absent
+      register: route_removed

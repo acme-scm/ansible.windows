@@ -1,9 +1,9 @@
 ---
-- name: test SCManager.cs
+- name: Test SCManager.cs
   scmanager_tests:
   register: scmanager_test
 
-- name: assert test SCManager.cs
-  assert:
+- name: Assert test SCManager.cs
+  ansible.builtin.assert:
     that:
-    - scmanager_test.data == "success"
+      - scmanager_test.data == "success"

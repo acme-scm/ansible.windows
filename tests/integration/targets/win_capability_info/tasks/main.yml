@@ -1,9 +1,10 @@
-- name: get OS version
+---
+- name: Get OS version
   win_powershell:
     script: (Get-Item -LiteralPath $env:SystemRoot\System32\kernel32.dll).VersionInfo.ProductVersion.ToString()
-  changed_when: False
+  changed_when: false
   register: os_version
 
-- name: run tests if OS is Server 2019 or newer
+- name: Run tests if OS is Server 2019 or newer
+  ansible.builtin.include_tasks: tests.yml
   when: os_version.output[0] is version('10.0.17763', '>=')
-  include_tasks: tests.yml
